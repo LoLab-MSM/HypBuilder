@@ -102,7 +102,15 @@ class NS_KDE:
 
         return self.Z
 
+    def _MCMC_sample(self):
+        pass
+
     def _KDE_sample(self):
+
+        # TRY LOOPING OVER SINGLE VARIABLES
+        # MULTIPLE LH FUNCTIONS FOR MULTIPLE METRICS
+        # OTHER KERNELS
+        # MULTIPLE POINTS ADDED SIMULTANEOUSLY
 
         # # construct covariance matrix
         # param_obs = []
