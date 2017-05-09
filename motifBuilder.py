@@ -239,7 +239,7 @@ class Rxn:
 
 # read in the library of molecules and their associated reactions
 
-mol_library = open('molecule_library.py', 'r')
+mol_library = open('SPN_library.py', 'r')
 molecule_list = defaultdict(list)
 
 molecule = None

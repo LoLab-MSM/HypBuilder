@@ -2,7 +2,13 @@
   <dictionary name="kochenma">
     <words>
       <w>diag</w>
+      <w>functionalize</w>
+      <w>interm</w>
       <w>mininest</w>
+      <w>minterm</w>
+      <w>parameterizations</w>
+      <w>rmse</w>
+      <w>truncnorm</w>
     </words>
   </dictionary>
 </component>
