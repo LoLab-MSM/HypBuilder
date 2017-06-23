@@ -8,7 +8,7 @@
 # reaction: binding
 # direction: input
 # reactants: effector
-# rxnTemplate: effector + effector <> effector % effector
+# rxnTemplates: effector + effector <> effector % effector
 # $$$
 
 '''
@@ -17,12 +17,12 @@ molecule: protein
 reaction: translation
 direction: input
 reactants: mRNA
-rxnTemplate: mRNA() >> mRNA() + protein()
+rxnTemplates: mRNA() >> mRNA() + protein()
 $$$
 reaction: degradation
 direction: self
 reactants: None
-rxnTemplate: protein() >> None
+rxnTemplates: protein() >> None
 $$$
 +++
 
@@ -43,12 +43,12 @@ molTemplate: TF,productTF|None
 reaction: TFbinding
 direction: input
 reactants: TF
-rxnTemplate: TF(gene=None) + gene(TF=None) <> TF(gene=1) % gene(TF=1)
+rxnTemplates: TF(gene=None) + gene(TF=None) <> TF(gene=1) % gene(TF=1)
 $$$
 reaction: pTFbinding
 direction: input
 reactants: productTF
-rxnTemplate: productTF(gene=None) + gene(productTF=None) <> productTF(gene=1) % gene(productTF=1)
+rxnTemplates: productTF(gene=None) + gene(productTF=None) <> productTF(gene=1) % gene(productTF=1)
 $$$
 reaction: transcription
 direction: output
@@ -61,13 +61,13 @@ molecule: RNA
 reaction: transcription
 direction: input
 reactants: gene
-rxnTemplate: gene() >> gene() + RNA()
+rxnTemplates: gene() >> gene() + RNA()
 instruction: gene: combinatorial
 $$$
 reaction: degradation
 direction: input
 reactants: None
-rxnTemplate: RNA() >> none
+rxnTemplates: RNA() >> none
 $$$
 +++
 
@@ -91,7 +91,7 @@ $$$
 reaction: binding
 direction: input
 reactants: effector
-rxnTemplate: effector(TF=None) + TF(effector=None) <> effector(TF=1) % TF(effector=1)
+rxnTemplates: effector(TF=None) + TF(effector=None) <> effector(TF=1) % TF(effector=1)
 $$$
 +++
 
@@ -111,7 +111,7 @@ $$$
 reaction: binding
 direction: input
 reactants: effector
-rxnTemplate: effector(protease=None) + protease(effector=None) <> effector(protease=1) % protease(effector=1)
+rxnTemplates: effector(protease=None) + protease(effector=None) <> effector(protease=1) % protease(effector=1)
 $$$
 +++
 
@@ -122,7 +122,7 @@ parent: protein
 reaction: cleavage_binding
 direction: input
 reactants: protease
-rxnTemplate: protease(precursor=None) + precursor(protease=None) <> protease(precursor=1) % precursor(protease=1)
+rxnTemplates: protease(precursor=None) + precursor(protease=None) <> protease(precursor=1) % precursor(protease=1)
 $$$
 reaction: cleavage
 direction: output
@@ -138,7 +138,7 @@ reaction: cleavage
 direction: input
 reactants: protease
 reactants: precursor
-rxnTemplate: protease(precursor=1) % precursor(protease=1) >> protease(precursor=None) + productTF()
+rxnTemplates: protease(precursor=1) % precursor(protease=1) >> protease(precursor=None) + productTF()
 instruction: productTF(multiple)
 $$$
 reaction: pTFbinding
@@ -148,7 +148,7 @@ $$$
 reaction: degradation
 direction: self
 reactants: None
-rxnTemplate: productTF() >> None
+rxnTemplates: productTF() >> None
 $$$
 +++
 
@@ -177,7 +177,7 @@ $$$
 reaction: dimerization
 direction: input
 reactants: subunit_out
-rxnTemplate: subunit_in(subunit_out=None) + subunit_out(subunit_in=None) <> subunit_in(subunit_out=1) % subunit_out(subunit_in=1)
+rxnTemplates: subunit_in(subunit_out=None) + subunit_out(subunit_in=None) <> subunit_in(subunit_out=1) % subunit_out(subunit_in=1)
 $$$
 +++
 
@@ -187,7 +187,7 @@ reaction: rename
 direction: input
 reactants: subunit_in
 reactants: subunit_out
-rxnTemplate: subunit_in(subunit_out=1) % subunit_out(subunit_in=1) <> pseudonym()
+rxnTemplates: subunit_in(subunit_out=1) % subunit_out(subunit_in=1) <> pseudonym()
 instruction: rates(f=0,r=0)
 $$$
 +++

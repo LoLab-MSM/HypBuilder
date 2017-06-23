@@ -278,7 +278,7 @@ for line in mol_library:
             reactants.append(line[11:-1])
         if 'target' in line:
             targets.append(line[8:-1])
-        if 'rxnTemplate' in line:
+        if 'rxnTemplates' in line:
             rxnTemplate = line[13:-1]
         if 'instruction' in line:
             instructions.append(line[13:-1])
