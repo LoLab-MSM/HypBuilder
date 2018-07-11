@@ -1,0 +1,245 @@
+
+molecule: pore
+---
+reaction: pore_formation
+direction: self
+template: pore(pore_1=None, pore_2=None) + pore(pore_1=None, pore_2=None) <> pore(pore_1=None, pore_2=1) % pore(pore_1=1, pore_2=None)
+template: pore(pore_1=None, pore_2=None) + pore(pore_1=None, pore_2=1) % pore(pore_1=1, pore_2=None) <> pore(pore_1=3, pore_2=1) % pore(pore_1=1, pore_2=2) % pore(pore_1=2, pore_2=3)
+template: pore(pore_1=None, pore_2=None) + pore(pore_1=3, pore_2=1) % pore(pore_1=1, pore_2=2) % pore(pore_1=2, pore_2=3) <> pore(pore_1=4, pore_2=1) % pore(pore_1=1, pore_2=2) % pore(pore_1=2, pore_2=3) % pore(pore_1=3, pore_2=4)
+$$$
+reaction: transport_binding
+direction: output
+target: cargo_M
+$$$
+reaction: transport_step
+direction: output
+target: cargo_C
+$$$
+reaction: transport
+direction: output
+target: cargo_C
+$$$
++++
+
+molecule: cargo_M
+---
+reaction: transport_binding
+direction: input
+reactant: pore
+template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_M(pore=None) <> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5)
+$$$
+reaction: transport_step
+direction: output
+target: cargo_C
+$$$
+reaction: transport
+direction: output
+target: cargo_C
+$$$
++++
+
+molecule: cargo_C
+---
+reaction: transport_step
+direction: input
+reactant: pore
+reactant: cargo_M
+template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5) >> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_C()
+$$$
+reaction: transport
+direction: input
+reactant: pore
+reactant: cargo_M
+template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_M(pore=None) <> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5)
+template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5) >> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_C()
+$$$
++++
+
+molecule: inhibitor
+---
+reaction: inhibition
+direction: output
+target: inh_target
+$$$
++++
+
+molecule: inh_target
+---
+reaction: inhibition
+direction: input
+reactant: inhibitor
+template: inhibitor(inh_target=None) + inh_target(inhibitor=None) <> inhibitor(inh_target=1) % inh_target(inhibitor=1)
+$$$
++++
+
+molecule: activator
+---
+reaction: activation
+direction: output
+target: act_target
+$$$
++++
+
+molecule: act_target
+---
+reaction: activation
+direction: input
+reactant: activator
+template: activator(act_target=None) + act_target(activator=None) <> activator(act_target=1) % act_target(activator=1)
+$$$
++++
+
+molecule: subunit_a
+---
+reaction: dimer_binding
+direction: output
+target: subunit_b
+$$$
+reaction: dimerization_step
+direction: output
+target: dimer
+$$$
+reaction: dimerization
+direction: output
+target: dimer
+$$$
++++
+
+molecule: subunit_b
+---
+reaction: dimer_binding
+direction: input
+reactant: subunit_a
+template: subunit_a(subunit_b=None) + subunit_b(subunit_a=None) <> subunit_a(subunit_b=1) % subunit_b(subunit_a=1)
+$$$
+reaction: dimerization_step
+direction: output
+target: dimer
+$$$
+reaction: dimerization
+direction: output
+target: dimer
+$$$
++++
+
+molecule: dimer
+---
+reaction: dimerization_step
+direction: input
+reactant: subunit_a
+reactant: subunit_b
+template: subunit_a(subunit_b=1) % subunit_b(subunit_a=1) >> dimer()
+$$$
+reaction: dimerization
+direction: input
+reactant: subunit_a
+reactant: subunit_b
+template: subunit_a(subunit_b=None) + subunit_b(subunit_a=None) <> subunit_a(subunit_b=1) % subunit_b(subunit_a=1)
+template: subunit_a(subunit_b=1) % subunit_b(subunit_a=1) >> dimer()
+$$$
++++
+
+molecule: subunit_c
+---
+reaction: conversion
+direction: output
+target: complex
+$$$
++++
+
+molecule: subunit_d
+---
+reaction: conversion
+direction: output
+target: complex
+$$$
++++
+
+molecule: complex
+---
+reaction: conversion
+direction: input
+reactant: subunit_c
+reactant: subunit_d
+template: subunit_c() + subunit_d() <> complex()
+$$$
++++
+
+molecule: self_substrate
+---
+reaction: self_catalyze
+direction: input
+reactant: self_catalyzer
+template: self_catalyzer(self_substrate=None) + self_substrate(self_catalyzer=None) <> self_catalyzer(self_substrate=1) % self_substrate(self_catalyzer=1)
+template: self_catalyzer(self_substrate=1) % self_substrate(self_catalyzer=1) >> self_catalyzer(self_substrate=None) + self_catalyzer(self_substrate=None)
+$$$
++++
+
+molecule: self_catalyzer
+---
+reaction: self_catalyze
+direction: output
+target: self_substrate
+$$$
++++
+
+molecule: catalyzer
+---
+reaction: substrate_binding
+direction: output
+target: substrate
+$$$
+reaction: catalytic_step
+direction: output
+target: product
+$$$
++++
+
+
+
+molecule: substrate
+---
+reaction: substrate_binding
+direction: input
+reactant: catalyzer
+template: catalyzer(substrate=None) + substrate(catalyzer=None) <> catalyzer(substrate=1) % substrate(catalyzer=1)
+$$$
+reaction: catalytic_step
+direction: output
+target: product
+$$$
++++
+
+molecule: product
+---
+reaction: catalytic_step
+direction: input
+reactant: catalyzer
+reactant: substrate
+template: catalyzer(substrate=1) % substrate(catalyzer=1) >> catalyzer(substrate=None) + product()
+$$$
+reaction: catalysis
+direction: input
+reactant: catalyzer
+reactant: substrate
+template: catalyzer(substrate=None) + substrate(catalyzer=None) <> catalyzer(substrate=1) % substrate(catalyzer=1)
+template: catalyzer(substrate=1) % substrate(catalyzer=1) >> catalyzer(substrate=None) + product()
+$$$
++++
+
+molecule: equil_a
+---
+reaction: equilibration
+direction: output
+target: equil_b
+$$$
++++
+
+molecule: equil_b
+---
+reaction: equilibration
+direction: input
+reactant: equil_a
+template: equil_a() <> equil_b()
+$$$
++++
