@@ -9,6 +9,7 @@ import re
 from pysb.core import MonomerPattern, ComplexPattern, RuleExpression, ReactionPattern, ANY, WILD
 from numpy.random import choice
 from pysb.export.pysb_flat import PysbFlatExporter
+import os
 
 
 class Node:
@@ -36,6 +37,7 @@ class Reaction:
 class Model:
 
     def __init__(self):
+        self.name = None
         self.library = defaultdict(dict)
         self.nodes = {}
         self.data_nodes = []
@@ -92,6 +94,7 @@ class ModelAssembler:
 
     def import_labels(self, file_name):
 
+        self.base_model.name = file_name.split('.')[0]
         components = False
         labels = False
         required = False
@@ -384,7 +387,9 @@ class ModelBuilder(Builder):
 
     def export(self):
 
-        f = open('output/model_' + str(self.num) + '.py', 'w+')
+        if not os.path.exists('output/' + self.current_model.name):
+            os.makedirs('output/' + self.current_model.name)
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'w+')
         f.write(PysbFlatExporter(self.model).export())
         f.close()
 
