@@ -1,2 +1,3 @@
 # HypBuilder
-Building mass-action models from node-edge graphs and Boolean networks
+
+HypBuilder is software for the large scale construction of physicochemical models in the format of PySB.
