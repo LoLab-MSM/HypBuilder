@@ -384,7 +384,7 @@ class ModelBuilder(Builder):
 
     def export(self):
 
-        f = open('HypBuilder_output/model_' + str(self.num) + '.py', 'w+')
+        f = open('output/model_' + str(self.num) + '.py', 'w+')
         f.write(PysbFlatExporter(self.model).export())
         f.close()
 
