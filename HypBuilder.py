@@ -189,6 +189,7 @@ class ModelAssembler:
                                 item = item.strip()[1:-1].split('|')
                                 for every in item:
                                     if every.strip() == 'd':
+                                        print 'data'
                                         self.base_model.data_nodes.append(each[0].strip())
                             else:
                                 values.append(item)
@@ -304,11 +305,11 @@ class ModelAssembler:
     def remove_useless_models(self):
 
         if self.base_model.data_nodes:
-
+            print self.base_model.data_nodes
             # models with interactions that cannot reach data nodes are eliminated
             models = []
             for mod in self.models:
-
+                print mod
                 # break down the reactions into sets of their component nodes
                 all_reactions = deepcopy(mod.required_reactions)
                 all_reactions.extend(deepcopy(mod.optional_reactions))
