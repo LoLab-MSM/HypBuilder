@@ -830,7 +830,9 @@ class ModelBuilder(Builder):
                 else:
                     states_2[item] = None
 
-            self.initial(ComplexPattern([MonomerPattern(mon_obj_1, states_1, None), MonomerPattern(mon_obj_2, states_2, None)], None), self.model.parameters[init_name])
+            self.initial(ComplexPattern([MonomerPattern(mon_obj_1, states_1, None),
+                                         MonomerPattern(mon_obj_2, states_2, None)], None),
+                         self.model.parameters[init_name])
 
         # initialize monomers
         for each in self.current_model.nodes:
