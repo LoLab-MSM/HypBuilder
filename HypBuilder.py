@@ -3,7 +3,7 @@ from collections import defaultdict
 from csv import reader as rd
 import numpy as np
 from copy import deepcopy
-from itertools import combinations
+from itertools import combinations, product
 from pysb.builder import Builder
 import re
 from pysb.core import MonomerPattern, ComplexPattern, RuleExpression, ReactionPattern, ANY, WILD
@@ -57,6 +57,7 @@ class ModelAssembler:
         self.models = []
         self.enumerate_models()
         self.remove_useless_models()
+        self.enumerate_initial_values()
         self.build_models()
 
     def import_library(self, file_name):
@@ -210,23 +211,26 @@ class ModelAssembler:
 
                             for rangge in ranges:
                                 rangge = rangge.split(':')
-                                # based on desired number of I.V.'s (+1)
-                                # example: 2:4-6 -> ['4.0', '5.0', '6.0']
+                                # based on desired number of I.V.'s
+                                # example: 3:4-6 -> ['4.0', '5.0', '6.0']
                                 if '-' in rangge[1]:
                                     num, param_range = float(rangge[0]), rangge[1]
                                     param_range = param_range.split('-')
                                     start, stop = float(param_range[0]), float(param_range[1])
                                     self.base_model.nodes[node].initial.extend(
-                                        list(np.arange(start, stop + 1, (stop - start) / num)))
+                                        list(np.arange(start, stop, (stop - start) / (num-1))))
                                     for i, every in enumerate(self.base_model.nodes[node].initial):
                                         self.base_model.nodes[node].initial[i] = str(every)
+                                    self.base_model.nodes[node].initial.append(str(stop))
                                 # based on desired increment
-                                # example: 4-6:2 -> ['4.0', '6.0']
+                                # example: 4-6:1 -> ['4.0', '5.0', '6.0']
                                 if '-' in rangge[0]:
                                     param_range, inc = rangge[0], float(rangge[1])
                                     param_range = param_range.split('-')
                                     start, stop = float(param_range[0]), float(param_range[1])
-                                    self.base_model.nodes[node].initial.extend(list(np.arange(start, stop + 1, inc)))
+                                    self.base_model.nodes[node].initial.extend(list(np.arange(start, stop, inc)))
+                                    if stop - self.base_model.nodes[node].initial[-1] == inc:
+                                        self.base_model.nodes[node].initial.append(stop)
                                     for i, every in enumerate(self.base_model.nodes[node].initial):
                                         self.base_model.nodes[node].initial[i] = str(every)
 
@@ -305,11 +309,11 @@ class ModelAssembler:
     def remove_useless_models(self):
 
         if self.base_model.data_nodes:
-            print self.base_model.data_nodes
+
             # models with interactions that cannot reach data nodes are eliminated
             models = []
             for mod in self.models:
-                print mod
+
                 # break down the reactions into sets of their component nodes
                 all_reactions = deepcopy(mod.required_reactions)
                 all_reactions.extend(deepcopy(mod.optional_reactions))
@@ -360,6 +364,25 @@ class ModelAssembler:
                     models.append(mod)
 
             self.models = models
+
+    def enumerate_initial_values(self):
+
+        models = []
+        for each in self.models:
+            nodes = []
+            value_lists = []
+            for item in each.nodes:
+                nodes.append(item)
+                value_lists.append(each.nodes[item].initial)
+            value_combinations = list(product(*value_lists))
+            for i, item in enumerate(value_combinations):
+                value_combinations[i] = list(item)
+            for item in value_combinations:
+                model = deepcopy(each)
+                for i, every in enumerate(item):
+                    model.nodes[nodes[i]].initial = [every]
+                models.append(deepcopy(model))
+        self.models = deepcopy(models)
 
     def build_models(self):
 
