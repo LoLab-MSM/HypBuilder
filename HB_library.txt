@@ -55,6 +55,23 @@ template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, carg
 $$$
 +++
 
+molecule: binder
+---
+reaction: binding
+direction: output
+target: binder_target
+$$$
++++
+
+molecule: binder_target
+---
+reaction: binding
+direction: input
+reactant: binder
+template: binder(binder_target=None) + binder_target(binder=None) <> binder(binder_target=1) % binder_target(binder=1)
+$$$
++++
+
 molecule: inhibitor
 ---
 reaction: inhibition
