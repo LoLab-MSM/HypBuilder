@@ -61,6 +61,14 @@ reaction: binding
 direction: output
 target: binder_target
 $$$
+reaction: binding_1
+direction: output
+target: binder_target
+$$$
+reaction: binding_2
+direction: output
+target: binder_target
+$$$
 +++
 
 molecule: binder_target
@@ -69,6 +77,16 @@ reaction: binding
 direction: input
 reactant: binder
 template: binder(binder_target=None) + binder_target(binder=None) <> binder(binder_target=1) % binder_target(binder=1)
+$$$
+reaction: binding_1
+direction: input
+reactant: binder
+template: binder(binder_target=None) + binder_target(binder_1=None) <> binder(binder_target=1) % binder_target(binder_1=1)
+$$$
+reaction: binding_2
+direction: input
+reactant: binder
+template: binder(binder_target=None) + binder_target(binder_2=None) <> binder(binder_target=1) % binder_target(binder_2=1)
 $$$
 +++
 

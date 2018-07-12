@@ -1,0 +1,10 @@
+
+model components
+
+A, 1
+B, 1
+
+required reactions
+
+binding_1, A(binder), B(binder_target)
+binding_2, A(binder), B(binder_target)
