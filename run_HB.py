@@ -10,3 +10,4 @@ from HypBuilder import ModelAssembler
 # ModelAssembler('HB_library.txt', 'optional_reactions_with_data_node_example.csv')
 # ModelAssembler('HB_library.txt', 'initial_values_example.csv')
 # ModelAssembler('HB_library.txt', 'multiple_binding_site_example.csv')
+# ModelAssembler('HB_library.txt', 'optional_sequence_example.csv')

@@ -57,7 +57,7 @@ class ModelAssembler:
         self.models = []
         self.enumerate_models()
         self.remove_useless_models()
-        self.enumerate_initial_values()
+        self.enumerate_initial_value_combinations()
         self.build_models()
 
     def import_library(self, file_name):
@@ -365,7 +365,83 @@ class ModelAssembler:
 
             self.models = models
 
-    def enumerate_initial_values(self):
+        # account for optional binding sequences
+        new_models = []
+        for each in self.models:
+            optionally_sequenced_reactions = []
+            # print each
+            # for i, item in enumerate(each.nodes):
+            #     print item
+            # print
+
+            for i, item in enumerate(each.required_reactions):
+                for j, every in enumerate(item):
+                    if '{' in every and 'o' in every.split(':')[2]:
+                        optionally_sequenced_reactions.append(['r', i, item])
+
+            for i, item in enumerate(each.optional_reactions):
+                for j, every in enumerate(item):
+                    if '{' in every and 'o' in every.split(':')[2]:
+                        optionally_sequenced_reactions.append(['o', i, item])
+
+            for i, item in enumerate(optionally_sequenced_reactions):
+                # print item
+                item2 = []
+                for j, every in enumerate(item[2]):
+                    if '{' in every:
+                        split_tag = every.rsplit(':')[:-1]
+                        tag = ''
+                        for thing in split_tag:
+                            tag += thing + ':'
+
+                        tag = tag[:-1] + '}'
+                        item2.append(tag)
+                    else:
+                        item2.append(every)
+
+                optionally_sequenced_reactions[i] = [item[0], item[1], item2]
+                # print optionally_sequenced_reactions[i]
+
+            for i, item in enumerate(optionally_sequenced_reactions):
+                optionally_sequenced_reactions[i] = [item, [item[0], item[1], [x for x in item[2] if '{' not in x]]]
+
+            osr_combos = list(product(*optionally_sequenced_reactions))
+
+
+            for item in osr_combos:
+                seq = []
+                for every in item:
+                    for thing in every[2]:
+                        if '{' in thing:
+                            seq.append(int(thing.split(':')[1][:-1]))
+                list.sort(seq)
+                print
+                print item
+                print seq
+                if len(seq) > 1 and len(seq) == seq[-1] - seq[0] + 1:
+                    new_model = deepcopy(each)
+                    for every in item:
+                        if every[0] == 'r':
+                            new_model.required_reactions[every[1]] = every[2]
+                        if every[0] == 'o':
+                            new_model.optional_reactions[every[1]] = every[2]
+                    new_models.append(new_model)
+
+                if not seq:
+                    new_model = deepcopy(each)
+                    for every in item:
+                        if every[0] == 'r':
+                            new_model.required_reactions[every[1]] = every[2]
+                        if every[0] == 'o':
+                            new_model.optional_reactions[every[1]] = every[2]
+                    new_models.append(new_model)
+
+        self.models = new_models
+
+
+
+
+    def enumerate_initial_value_combinations(self):
 
         models = []
         for each in self.models:
