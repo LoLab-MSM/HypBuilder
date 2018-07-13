@@ -415,9 +415,6 @@ class ModelAssembler:
                         if '{' in thing:
                             seq.append(int(thing.split(':')[1][:-1]))
                 list.sort(seq)
-                print
-                print item
-                print seq
                 if len(seq) > 1 and len(seq) == seq[-1] - seq[0] + 1:
                     new_model = deepcopy(each)
                     for every in item:
