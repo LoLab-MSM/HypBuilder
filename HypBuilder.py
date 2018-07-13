@@ -369,10 +369,6 @@ class ModelAssembler:
         new_models = []
         for each in self.models:
             optionally_sequenced_reactions = []
-            # print each
-            # for i, item in enumerate(each.nodes):
-            #     print item
-            # print
 
             for i, item in enumerate(each.required_reactions):
                 for j, every in enumerate(item):
@@ -385,7 +381,6 @@ class ModelAssembler:
                         optionally_sequenced_reactions.append(['o', i, item])
 
             for i, item in enumerate(optionally_sequenced_reactions):
-                # print item
                 item2 = []
                 for j, every in enumerate(item[2]):
                     if '{' in every:
@@ -393,21 +388,16 @@ class ModelAssembler:
                         tag = ''
                         for thing in split_tag:
                             tag += thing + ':'
-
                         tag = tag[:-1] + '}'
                         item2.append(tag)
                     else:
                         item2.append(every)
-
                 optionally_sequenced_reactions[i] = [item[0], item[1], item2]
-                # print optionally_sequenced_reactions[i]
 
             for i, item in enumerate(optionally_sequenced_reactions):
                 optionally_sequenced_reactions[i] = [item, [item[0], item[1], [x for x in item[2] if '{' not in x]]]
 
             osr_combos = list(product(*optionally_sequenced_reactions))
-
-
             for item in osr_combos:
                 seq = []
                 for every in item:
@@ -423,7 +413,6 @@ class ModelAssembler:
                         if every[0] == 'o':
                             new_model.optional_reactions[every[1]] = every[2]
                     new_models.append(new_model)
-
                 if not seq:
                     new_model = deepcopy(each)
                     for every in item:
@@ -434,9 +423,6 @@ class ModelAssembler:
                     new_models.append(new_model)
 
         self.models = new_models
-
-
-
 
     def enumerate_initial_value_combinations(self):
 
