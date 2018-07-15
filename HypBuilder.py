@@ -368,16 +368,17 @@ class ModelAssembler:
         # account for optional binding sequences
         new_models = []
         for each in self.models:
+
             optionally_sequenced_reactions = []
 
             for i, item in enumerate(each.required_reactions):
                 for j, every in enumerate(item):
-                    if '{' in every and 'o' in every.split(':')[2]:
+                    if '{' in every and len(every.split(':')) > 2 and 'o' in every.split(':')[2]:
                         optionally_sequenced_reactions.append(['r', i, item])
 
             for i, item in enumerate(each.optional_reactions):
                 for j, every in enumerate(item):
-                    if '{' in every and 'o' in every.split(':')[2]:
+                    if '{' in every and len(every.split(':')) > 2 and 'o' in every.split(':')[2]:
                         optionally_sequenced_reactions.append(['o', i, item])
 
             for i, item in enumerate(optionally_sequenced_reactions):
