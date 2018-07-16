@@ -1,0 +1,18 @@
+
+# a model with initial bound species will be created
+
+model components
+
+A, 10
+B, 1
+C, 10
+D, 10
+E, 5
+
+required reactions
+
+inhibition, D(inhibitor), E(inh_target), {f:5}
+inhibition, C(inhibitor), D(inh_target)
+inhibition, A(inhibitor), C(inh_target), {f:all}
+inhibition, B(inhibitor), C(inh_target)
+

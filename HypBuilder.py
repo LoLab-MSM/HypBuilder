@@ -830,61 +830,139 @@ class ModelBuilder(Builder):
         for each in self.current_model.nodes:
             self.current_model.nodes[each].initial[0] = float(self.current_model.nodes[each].initial[0])
 
-        # finds binding reactions that should be initialized as bound
+        # finds binding reactions that should be initialized as bound (maxed)
         binding_rxn_list = []
         for i, each in enumerate(self.reaction_tags):
-            if 'f' in each:
-                if '%' in self.parsed_reactions[i]:
-                    binding_rxn_list.append(self.parsed_reactions[i])
+            for item in each:
+                if 'f' in item:
+                    if '%' in self.parsed_reactions[i]:
+                        binding_rxn_list.append([self.parsed_reactions[i], item.split(':')[1]])
 
         # adjusts iv's for bound monomers and initialize bound species
-        molecules = []
-        binding_pairs = []
+        max_molecules = []
+        max_binding_pairs = []
+        
+        specific_molecules = []
+        specific_binding_pairs = []
+        specific_binding_quant = []
 
         for each in binding_rxn_list:
-            if each[0][0] not in molecules:
-                molecules.append(each[0][0])
-            if each[2][0] not in molecules:
-                molecules.append(each[2][0])
+            if each[1] == 'all':
+                if each[0][0][0] not in max_molecules:
+                    max_molecules.append(each[0][0][0])
+                if each[0][2][0] not in max_molecules:
+                    max_molecules.append(each[0][2][0])
+            if each[1].isdigit():
+                if each[0][0][0] not in specific_molecules:
+                    specific_molecules.append(each[0][0][0])
+                if each[0][2][0] not in specific_molecules:
+                    specific_molecules.append(each[0][2][0])
 
         for each in binding_rxn_list:
-            ind_1 = molecules.index(each[0][0])
-            ind_2 = molecules.index(each[2][0])
-            binding_pairs.append([ind_1, ind_2])
+            if each[1] == 'all':
+                ind_1 = max_molecules.index(each[0][0][0])
+                ind_2 = max_molecules.index(each[0][2][0])
+                max_binding_pairs.append([ind_1, ind_2])
+            if each[1].isdigit():
+                ind_1 = specific_molecules.index(each[0][0][0])
+                ind_2 = specific_molecules.index(each[0][2][0])
+                specific_binding_pairs.append([ind_1, ind_2])
+                specific_binding_quant.append(float(each[1]))
 
-        molecule_quant = []
-        binding_quant = [0 for _ in binding_pairs]
+        # rearrange quantities for max binding
+        max_molecule_quant = []
+        max_binding_quant = [0 for _ in max_binding_pairs]
+        for each in max_molecules:
+            max_molecule_quant.append(self.current_model.nodes[each].initial[0])
+        self.random_binding(max_molecule_quant, max_binding_pairs, max_binding_quant)
+        for i, each in enumerate(max_molecules):
+            self.current_model.nodes[each].initial[0] = max_molecule_quant[i]
 
-        for each in molecules:
-            molecule_quant.append(self.current_model.nodes[each].initial[0])
+        print '', max_molecules
+        print '', max_molecule_quant
+        print '', max_binding_pairs
+        print '', max_binding_quant
 
-        self.random_binding(molecule_quant, binding_pairs, binding_quant)
+        # rearrange quantities for specific binding
+        specific_molecule_quant = []
+        for each in specific_molecules:
+            specific_molecule_quant.append(self.current_model.nodes[each].initial[0])
 
-        for i, each in enumerate(molecules):
-            self.current_model.nodes[each].initial[0] = molecule_quant[i]
+        for i, each in enumerate(specific_binding_quant):
+            if each > specific_molecule_quant[specific_binding_pairs[i][0]] \
+                    or each > specific_molecule_quant[specific_binding_pairs[i][1]]:
+                print 'The specified number for the bound species', specific_molecules[
+                    specific_binding_pairs[i][0]], '%', specific_molecules[specific_binding_pairs[i][1]], \
+                    'is', str(each) + '.\n', 'The number of molecules for', specific_molecules[
+                    specific_binding_pairs[i][0]], 'and', specific_molecules[specific_binding_pairs[i][1]], 'are', \
+                    specific_molecule_quant[specific_binding_pairs[i][0]], 'and', specific_molecule_quant[
+                    specific_binding_pairs[i][1]], 'respectively.\nThe number of molecules for both monomers must ' \
+                                                   'be at least as great as the specified number for the bound species.'
+                quit()
+            specific_molecule_quant[specific_binding_pairs[i][0]] -= each
+            specific_molecule_quant[specific_binding_pairs[i][1]] -= each
+        for i, each in enumerate(specific_molecules):
+            self.current_model.nodes[each].initial[0] = specific_molecule_quant[i]
+
+
+
+        print
+        print '', specific_molecules
+        print '', specific_molecule_quant
+        print '', specific_binding_pairs
+        print '', specific_binding_quant
 
         bond_num = 1
 
-        for i, each in enumerate(binding_pairs):
-            init_name = molecules[each[0]] + '_' + molecules[each[1]] + '_0'
-            mon_obj_1 = self.model.monomers[molecules[each[0]]]
-            mon_obj_2 = self.model.monomers[molecules[each[1]]]
+        for i, each in enumerate(max_binding_pairs):
+            init_name = max_molecules[each[0]] + '_' + max_molecules[each[1]] + '_0'
+            mon_obj_1 = self.model.monomers[max_molecules[each[0]]]
+            mon_obj_2 = self.model.monomers[max_molecules[each[1]]]
             states_1 = {}
             states_2 = {}
-            self.parameter(init_name, binding_quant[i])
+            self.parameter(init_name, max_binding_quant[i])
 
             for item in mon_obj_1.sites:
-                if item == molecules[each[1]]:
+                if item == max_molecules[each[1]]:
                     states_1[item] = bond_num
-                elif '_' in item and item.split('_')[0] == molecules[each[1]]:
+                elif '_' in item and item.split('_')[0] == max_molecules[each[1]]:
                     states_1[item] = bond_num
                 else:
                     states_1[item] = None
 
             for item in mon_obj_2.sites:
-                if item == molecules[each[0]]:
+                if item == max_molecules[each[0]]:
                     states_2[item] = bond_num
-                elif '_' in item and item.split('_')[0] == molecules[each[0]]:
+                elif '_' in item and item.split('_')[0] == max_molecules[each[0]]:
+                    states_1[item] = bond_num
+                    bond_num += 1
+                else:
+                    states_2[item] = None
+
+            self.initial(ComplexPattern([MonomerPattern(mon_obj_1, states_1, None),
+                                         MonomerPattern(mon_obj_2, states_2, None)], None),
+                         self.model.parameters[init_name])
+
+        for i, each in enumerate(specific_binding_pairs):
+            init_name = specific_molecules[each[0]] + '_' + specific_molecules[each[1]] + '_0'
+            mon_obj_1 = self.model.monomers[specific_molecules[each[0]]]
+            mon_obj_2 = self.model.monomers[specific_molecules[each[1]]]
+            states_1 = {}
+            states_2 = {}
+            self.parameter(init_name, specific_binding_quant[i])
+
+            for item in mon_obj_1.sites:
+                if item == specific_molecules[each[1]]:
+                    states_1[item] = bond_num
+                elif '_' in item and item.split('_')[0] == specific_molecules[each[1]]:
+                    states_1[item] = bond_num
+                else:
+                    states_1[item] = None
+
+            for item in mon_obj_2.sites:
+                if item == specific_molecules[each[0]]:
+                    states_2[item] = bond_num
+                elif '_' in item and item.split('_')[0] == specific_molecules[each[0]]:
                     states_1[item] = bond_num
                     bond_num += 1
                 else:
