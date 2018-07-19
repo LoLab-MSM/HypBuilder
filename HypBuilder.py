@@ -190,7 +190,6 @@ class ModelAssembler:
                                 item = item.strip()[1:-1].split('|')
                                 for every in item:
                                     if every.strip() == 'd':
-                                        print 'data'
                                         self.base_model.data_nodes.append(each[0].strip())
                             else:
                                 values.append(item)
@@ -878,11 +877,6 @@ class ModelBuilder(Builder):
         for i, each in enumerate(max_molecules):
             self.current_model.nodes[each].initial[0] = max_molecule_quant[i]
 
-        print '', max_molecules
-        print '', max_molecule_quant
-        print '', max_binding_pairs
-        print '', max_binding_quant
-
         # rearrange quantities for specific binding
         specific_molecule_quant = []
         for each in specific_molecules:
@@ -903,14 +897,6 @@ class ModelBuilder(Builder):
             specific_molecule_quant[specific_binding_pairs[i][1]] -= each
         for i, each in enumerate(specific_molecules):
             self.current_model.nodes[each].initial[0] = specific_molecule_quant[i]
-
-
-
-        print
-        print '', specific_molecules
-        print '', specific_molecule_quant
-        print '', specific_binding_pairs
-        print '', specific_binding_quant
 
         bond_num = 1
 
