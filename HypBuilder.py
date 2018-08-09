@@ -25,10 +25,11 @@ class Node:
 
 class Reaction:
 
-    def __init__(self, molecule, direction, reactants, targets, templates):
+    def __init__(self, molecule, direction, reactants, reactants2, targets, templates):
         self.molecule = molecule
         self.direction = direction
         self.reactants = reactants
+        self.reactants2 = reactants2
         self.targets = targets
         self.templates = templates
         self.parsed_templates = []
@@ -68,6 +69,7 @@ class ModelAssembler:
         reactants = []
         targets = []
         templates = []
+        reactants2 = None
 
         library_file = open(file_name)
         for line in library_file:
@@ -83,13 +85,16 @@ class ModelAssembler:
                 targets.append(line.split(':', 1)[1].strip())
             if 'template:' in line:
                 templates.append(line.split(':', 1)[1].strip())
+            if 'reactants' in line:
+                reactants2 = line.split(':', 1)[1].strip().split()
             if '$$$' in line:
                 self.base_model.library[molecule][reaction] = \
-                    Reaction(molecule, direction, reactants, targets, templates)
+                    Reaction(molecule, direction, reactants, reactants2, targets, templates)
 
                 reaction = None
                 direction = None
                 reactants = []
+                reactants2 = None
                 targets = []
                 templates = []
 
@@ -293,6 +298,10 @@ class ModelAssembler:
                         self.base_model.text.append(''.join(each))
 
     def enumerate_models(self):
+
+        # todo: For autonomous search of the model space, checks for complete reactions will need to be made.
+        # todo: Connectivity will need to be considered.
+        # todo: This will likely need to be done here.
 
         # forms combinations of the optional reactions
         reaction_combinations = []
@@ -503,7 +512,7 @@ class ModelBuilder(Builder):
             for reaction in self.current_model.library[molecule]:
                 self.parsed_templates[molecule][reaction] = []
                 for template in self.current_model.library[molecule][reaction].templates:
-                    molecules = re.split(r'\s*>>\s*|\s*\+\s*|\s*<>\s*|\s*%\s*', template)
+                    molecules = re.split(r'\s*\|\s*|\s*>>\s*|\s*\+\s*|\s*<>\s*|\s*%\s*', template)
                     operations = re.findall(r'\s*\|\s*|\s*>>\s*|\s*\+\s*|\s*<>\s*|\s*%\s*', template)
                     parsed = []
                     for mols in molecules:
@@ -534,8 +543,7 @@ class ModelBuilder(Builder):
         reactions_to_process.extend(deepcopy(self.current_model.optional_reactions))
 
         for each in reactions_to_process:
-            # print each
-            # quit()
+
             # collect reaction, the molecules involved, and their molecule types from the model reactions.
             reaction = each[0]
             molecules = []
@@ -547,20 +555,24 @@ class ModelBuilder(Builder):
                     molecules.append(item.split('(')[0])
                     molecule_types.append(item.split('(')[1][:-1])
                 elif '}' in item:
-                    tags.append(item.strip()[1:-1])
+                    tags.extend(item.strip()[1:-1].split('|'))
                 else:
                     param_values.append(item.strip())
 
             # from reaction template substitute the corresponding molecules
             for mt in molecule_types:
                 if reaction in self.parsed_templates[mt] and self.parsed_templates[mt][reaction]:
+
                     for t, temp in enumerate(self.parsed_templates[mt][reaction]):
                         reaction_name = each[0] + '_' + str(t)
                         for elem in each[1:]:
+
                             if '(' in elem:
                                 reaction_name += '_' + elem.split('(')[0] + '_' + elem.split('(')[1][:-1]
+
                         self.reaction_names.append(reaction_name)
                         rxn = deepcopy(temp)
+
                         for i, elem in enumerate(rxn):
                             if isinstance(elem, list):
                                 for j, mol_typ in enumerate(molecule_types):
@@ -589,6 +601,8 @@ class ModelBuilder(Builder):
                                 self.reaction_parameter_values[-1].extend(['vary'])
 
     def process_competitive_binding(self):
+
+        # todo: add support to accomplish this at the level of the library
 
         # process competing sites
         competing_sites = defaultdict(list)
@@ -735,7 +749,7 @@ class ModelBuilder(Builder):
             # define complex patterns
             com_pats_temp = [[]]
             for item in mon_pats:
-                if item == '>>' or item == '<>':
+                if item == '>>' or item == '<>' or item == '|':
                     com_pats_temp.extend([item, []])
                 elif item == '+':
                     com_pats_temp.append([])
@@ -743,10 +757,10 @@ class ModelBuilder(Builder):
                     pass
                 else:
                     com_pats_temp[-1].append(item)
-            # print com_pats_temp
+
             com_pats = []
             for item in com_pats_temp:
-                if item == '>>' or item == '<>':
+                if item == '>>' or item == '<>' or item == '|':
                     com_pats.append(item)
                 elif item == ['None']:
                     pass
