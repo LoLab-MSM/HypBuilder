@@ -230,8 +230,6 @@ target: product
 $$$
 +++
 
-
-
 molecule: substrate
 ---
 reaction: substrate_binding
@@ -278,3 +276,59 @@ reactant: equil_a
 template: equil_a() <> equil_b()
 $$$
 +++
+
+molecule: redox_enzyme
+---
+reaction: redox
+reactants: donor acceptor reduced oxidized
+$$$
++++
+
+molecule: donor
+---
+reaction: redox
+reactants: redox_enzyme acceptor reduced oxidized
+$$$
++++
+
+molecule: acceptor
+---
+reaction: redox
+reactants: redox_enzyme donor reduced oxidized
+$$$
++++
+
+molecule: reduced
+---
+reaction: redox
+reactants: redox_enzyme donor acceptor oxidized
+$$$
++++
+
+molecule: oxidized
+---
+reaction: redox
+reactants: redox_enzyme donor acceptor reduced
+template: redox_enzyme(donor=None, acceptor=None) + donor(redox_enzyme=None) | redox_enzyme(donor=1, acceptor=None) % donor(redox_enzyme=1)
+template: redox_enzyme(donor=1, acceptor=None) % donor(redox_enzyme=1) + acceptor(redox_enzyme=None) | redox_enzyme(donor=1, acceptor=2) % donor(redox_enzyme=1) % acceptor(redox_enzyme=2)
+template: redox_enzyme(donor=1, acceptor=2) % donor(redox_enzyme=1) % acceptor(redox_enzyme=2) >> redox_enzyme(donor=None, acceptor=None) + oxidized() + reduced()
+$$$
++++
+
+molecule: convert_substrate
+---
+reaction: conversion
+reactants: convert_product
+$$$
++++
+
+molecule: convert_product
+---
+reaction: conversion
+reactants: convert_substrate
+template: convert_substrate() >> convert_product
+$$$
++++
+
+
+
