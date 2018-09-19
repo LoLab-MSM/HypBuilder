@@ -470,6 +470,7 @@ class ModelBuilder(Builder):
         self.parsed_templates = defaultdict(lambda: defaultdict(list))
         self.parsed_reactions = []
         self.reaction_tags = []
+        self.reaction_types = []
         self.reaction_names = []
         self.fill_reactions = []
         self.reaction_parameter_values = []
@@ -543,21 +544,29 @@ class ModelBuilder(Builder):
         reactions_to_process.extend(deepcopy(self.current_model.optional_reactions))
 
         for each in reactions_to_process:
-
+            # print each
             # collect reaction, the molecules involved, and their molecule types from the model reactions.
             reaction = each[0]
             molecules = []
             molecule_types = []
             tags = []
+            types = []
             param_values = []
             for item in each[1:]:
                 if ')' in item:
                     molecules.append(item.split('(')[0])
                     molecule_types.append(item.split('(')[1][:-1])
                 elif '}' in item:
-                    tags.extend(item.strip()[1:-1].split('|'))
+                    tgs = item.strip()[1:-1].split('|')
+                    for every in tgs:
+                        if every.split(':')[0] == 't':
+                            types.append(every.split(':')[1])
+                        else:
+                            tags.append(every)
+                    # tags.extend(item.strip()[1:-1].split('|'))
                 else:
                     param_values.append(item.strip())
+            # print tags
 
             # from reaction template substitute the corresponding molecules
             for mt in molecule_types:
@@ -587,6 +596,20 @@ class ModelBuilder(Builder):
 
                         self.reaction_tags.append(tags)
                         self.parsed_reactions.append(rxn)
+                        self.reaction_types.append([])
+                        if types:
+                            if '<>' in rxn or '|' in rxn:
+                                self.reaction_types[-1].append(types.pop(0))
+                                self.reaction_types[-1].append(types.pop(0))
+                            else:
+                                self.reaction_types[-1].append(types.pop(0))
+                        # else:
+                        #     if '<>' in rxn or '|' in rxn:
+                        #         self.reaction_types[-1].append(None)
+                        #         self.reaction_types[-1].append(None)
+                        #     else:
+                        #         self.reaction_types[-1].append(None)
+
                         self.reaction_parameter_values.append([])
                         if param_values:
                             if '<>' in rxn or '|' in rxn:
@@ -660,12 +683,26 @@ class ModelBuilder(Builder):
 
         # fill out monomer binding sites
         for i, rxn in enumerate(self.parsed_reactions):
+            # print
+            dwdc = []
+            for j, tag in enumerate(self.reaction_tags[i]):
+                # print tag
+                if tag:  # and ':' in tag:
+                    # print tag
+                    tag_split = tag.split(':')
+                    # print tag_split
+                    if tag_split[0] == 'dwdc':
+                        dwdc.extend(tag_split[1:])
+
+            # print dwdc
             for j, elem in enumerate(rxn):
+                # print elem
                 if isinstance(elem, list):
-                    for site in self.monomer_info[elem[0]]:
-                        if site not in self.parsed_reactions[i][j][1]:
-                            self.parsed_reactions[i][j][1].append(site)
-                            self.parsed_reactions[i][j][2].append('None')
+                    if elem[0] not in dwdc:
+                        for site in self.monomer_info[elem[0]]:
+                            if site not in self.parsed_reactions[i][j][1]:
+                                self.parsed_reactions[i][j][1].append(site)
+                                self.parsed_reactions[i][j][2].append('None')
 
         # process tags for reaction sequence information
         tags = {}
@@ -679,6 +716,40 @@ class ModelBuilder(Builder):
                             tags[item.split(':')[0]][-1] = [int(item.split(':')[1]), i]
                         else:
                             tags[item.split(':')[0]].append([int(item.split(':')[1]), i])
+
+        for each in tags:
+            tags[each].sort(key=lambda x: x[0])
+
+            for i, item in enumerate(tags[each]):
+                if i > 0:
+                    mo = []
+                    si = []
+                    st = []
+
+                    for every in self.parsed_reactions[tags[each][i-1][1]]:
+                        if isinstance(every, list):
+                            if every[0] not in mo:
+                                mo.append(every[0])
+                                si.append(every[1])
+                                st.append([])
+
+                    for every in self.parsed_reactions[tags[each][i-1][1]]:
+                        if isinstance(every, list):
+                            st[mo.index(every[0])].append(every[2])
+
+                    changes = []
+                    for j, every in enumerate(st):
+                        for k, thing in enumerate(every[0]):
+                            if every[0][k] != every[1][k]:
+                                changes.append([mo[j], si[j][k], every[0][k], every[1][k]])
+
+                    for j, every in enumerate(self.parsed_reactions[tags[each][i][1]]):
+                        if isinstance(every, list):
+                            for thing in changes:
+                                if every[0] == thing[0] and thing[1] not in every[1]:
+                                    self.parsed_reactions[tags[each][i][1]][j][1].append(thing[1])
+                                    self.parsed_reactions[tags[each][i][1]][j][2].append('None')
+
 
         # enforce sequences of reactions
         for each in tags:
@@ -712,6 +783,7 @@ class ModelBuilder(Builder):
                         effects.append(every)
                     if every == '<>' or every == '>>' or every == '|':
                         record = True
+
 
     def add_rules(self):
 
@@ -789,33 +861,76 @@ class ModelBuilder(Builder):
             # define rule expression
             rule_exp = RuleExpression(ReactionPattern(react_com_pats), ReactionPattern(prod_com_pats), reversible)
 
+            # for item, each in enumerate(self.reaction_types):
+            #     print each
+
+            suffix0 = '_0'
+            suffix1 = '_0'
+            if self.reaction_types[i]:
+                if reversible:
+                    suffix0 = self.reaction_types[i][0]
+                    suffix1 = self.reaction_types[i][1]
+                else:
+                    suffix0 = self.reaction_types[i][0]
+
             # add rules to the model
-            if reversible:
-                if self.is_float(self.reaction_parameter_values[i][0]):
-                    forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf' + '_0'
-                    self.parameter(forward, self.reaction_parameter_values[i][0])
-                else:
-                    forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf'
-                    self.parameter(forward, 1)
+            if self.reaction_types[i]:
+                if reversible:
 
-                if self.is_float(self.reaction_parameter_values[i][1]):
-                    reverse = self.reaction_names[i] + '_' + str(order[1]) + 'kr' + '_0'
-                    self.parameter(reverse, self.reaction_parameter_values[i][1])
-                else:
-                    reverse = self.reaction_names[i] + '_' + str(order[1]) + 'kr'
-                    self.parameter(reverse, 1)
+                    if self.is_float(self.reaction_parameter_values[i][0]):
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + suffix0 + '_0'
+                        self.parameter(forward, self.reaction_parameter_values[i][0])
+                    else:
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + suffix0
+                        self.parameter(forward, 1)
 
-                self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward],
-                          self.model.parameters[reverse])
+                    if self.is_float(self.reaction_parameter_values[i][1]):
+                        reverse = self.reaction_names[i] + '_' + str(order[1]) + suffix1 + '_0'
+                        self.parameter(reverse, self.reaction_parameter_values[i][1])
+                    else:
+                        reverse = self.reaction_names[i] + '_' + str(order[1]) + suffix1
+                        self.parameter(reverse, 1)
+
+                    self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward],
+                              self.model.parameters[reverse])
+                else:
+                    if self.is_float(self.reaction_parameter_values[i][0]):
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + suffix0 + '_0'
+                        self.parameter(forward, self.reaction_parameter_values[i][0])
+                    else:
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + suffix0
+                        self.parameter(forward, 1)
+
+                    self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward])
+
             else:
-                if self.is_float(self.reaction_parameter_values[i][0]):
-                    forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf' + '_0'
-                    self.parameter(forward, self.reaction_parameter_values[i][0])
-                else:
-                    forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf'
-                    self.parameter(forward, 1)
+                if reversible:
 
-                self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward])
+                    if self.is_float(self.reaction_parameter_values[i][0]):
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf' + '_0'
+                        self.parameter(forward, self.reaction_parameter_values[i][0])
+                    else:
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf'
+                        self.parameter(forward, 1)
+
+                    if self.is_float(self.reaction_parameter_values[i][1]):
+                        reverse = self.reaction_names[i] + '_' + str(order[1]) + 'kr' + '_0'
+                        self.parameter(reverse, self.reaction_parameter_values[i][1])
+                    else:
+                        reverse = self.reaction_names[i] + '_' + str(order[1]) + 'kr'
+                        self.parameter(reverse, 1)
+
+                    self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward],
+                              self.model.parameters[reverse])
+                else:
+                    if self.is_float(self.reaction_parameter_values[i][0]):
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf' + '_0'
+                        self.parameter(forward, self.reaction_parameter_values[i][0])
+                    else:
+                        forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf'
+                        self.parameter(forward, 1)
+
+                    self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward])
 
     @staticmethod
     def random_binding(mols, pairs, binds):
