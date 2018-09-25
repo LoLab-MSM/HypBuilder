@@ -31,7 +31,7 @@ Observable('E_obs', E())
 Observable('D_obs', D())
 
 Rule('inhibition_0_D_inhibitor_E_inh_target', D(E=None, C=None) + E(D=None) | D(E=1, C=None) % E(D=1), inhibition_0_D_inhibitor_E_inh_target_2kf, inhibition_0_D_inhibitor_E_inh_target_1kr)
-Rule('inhibition_0_C_inhibitor_D_inh_target', C(D=None, A=None, B=None) + D(C=None) | C(D=1, A=None, B=None) % D(C=1), inhibition_0_C_inhibitor_D_inh_target_2kf, inhibition_0_C_inhibitor_D_inh_target_1kr)
+Rule('inhibition_0_C_inhibitor_D_inh_target', C(D=None, B=None) + D(C=None) | C(D=1, B=None) % D(C=1), inhibition_0_C_inhibitor_D_inh_target_2kf, inhibition_0_C_inhibitor_D_inh_target_1kr)
 Rule('inhibition_0_A_inhibitor_C_inh_target', A(C=None) + C(D=None, A=None, B=None) | A(C=1) % C(D=None, A=1, B=None), inhibition_0_A_inhibitor_C_inh_target_2kf, inhibition_0_A_inhibitor_C_inh_target_1kr)
 Rule('inhibition_0_B_inhibitor_C_inh_target', B(C=None) + C(D=None, A=None, B=None) | B(C=1) % C(D=None, A=None, B=1), inhibition_0_B_inhibitor_C_inh_target_2kf, inhibition_0_B_inhibitor_C_inh_target_1kr)
 
