@@ -114,7 +114,18 @@ class ModelAssembler:
             # read in csv file
             reader = rd(label_file)
             label_list = list(reader)
-            for each in label_list:
+
+            for i, each in enumerate(label_list):
+                if each:
+                    for j, item in enumerate(each[:-1]):
+                        # print each[j].strip(), each[j+1].strip()
+
+                        if each[j].strip()[0] == '{' and each[j+1].strip()[-1] == '}':
+                            label_list[i][j] = label_list[i][j] + ',' + label_list[i][j+1]
+                            label_list[i].pop(j+1)
+                            break
+
+            for i, each in enumerate(label_list):
                 if each:
                     if each[0][0] == '#':
                         continue
@@ -188,7 +199,7 @@ class ModelAssembler:
                         node = each[0].strip()
                         self.base_model.nodes[node] = Node()
 
-                        # find tags
+                        # find data nodes and iv's
                         values = []
                         for item in each[1:]:
                             if '{' in item:
@@ -250,7 +261,7 @@ class ModelAssembler:
                         each = [x.strip() for x in each]
                         self.base_model.required_reactions.append(deepcopy(each))
                         for item in each[1:]:
-                            if '(' in item:
+                            if '(' in item and '{' not in item:
                                 item = item.split('(')
                                 item[1] = item[1][:-1]
                                 if item[1] not in self.base_model.library:
@@ -268,7 +279,7 @@ class ModelAssembler:
                         each = [x.strip() for x in each]
                         self.base_model.optional_reactions.append(deepcopy(each))
                         for item in each[1:]:
-                            if '(' in item:
+                            if '(' in item and '{' not in item:
                                 item = item.split('(')
                                 item[1] = item[1][:-1]
                                 if item[1] not in self.base_model.library:
@@ -304,6 +315,26 @@ class ModelAssembler:
         # todo: This will likely need to be done here.
 
         # forms combinations of the optional reactions
+        # take into account grouped reactions
+        op_re_gr = defaultdict(list)
+        for each in self.base_model.optional_reactions:
+            for item in each:
+                if '{' in item:
+                    item = item[1:-1].split('|')
+                    for every in item:
+                        every = every.split(':')
+                        if every[0][0] == 'g' and every[0] not in op_re_gr:
+                            op_re_gr[every[0]] = []
+
+        for each in self.base_model.optional_reactions:
+            for item in each:
+                if '{' in item:
+                    item = item[1:-1].split('|')
+                    for every in item:
+                        every = every.split(':')
+                        if every[0] in op_re_gr:
+                            op_re_gr[every[0]].append(each)
+
         reaction_combinations = []
         for i in range(len(self.base_model.optional_reactions) + 1):
             reaction_combinations.extend(list(combinations(self.base_model.optional_reactions, i)))
@@ -311,8 +342,22 @@ class ModelAssembler:
             reaction_combinations[i] = list(reaction_set)
         for reaction_set in reaction_combinations:
             new_model = deepcopy(self.base_model)
-            new_model.optional_reactions = reaction_set
-            self.models.append(deepcopy(new_model))
+
+            grouped = True
+            for each in reaction_set:
+                for item in op_re_gr:
+                    if each in op_re_gr[item]:
+
+                        for every in op_re_gr[item]:
+                            if every not in reaction_set:
+                                grouped = False
+                                break
+                        if not grouped:
+                            break
+            if grouped:
+
+                new_model.optional_reactions = reaction_set
+                self.models.append(deepcopy(new_model))
 
     def remove_useless_models(self):
 
@@ -517,6 +562,7 @@ class ModelBuilder(Builder):
                     operations = re.findall(r'\s*\|\s*|\s*>>\s*|\s*\+\s*|\s*<>\s*|\s*%\s*', template)
                     parsed = []
                     for mols in molecules:
+
                         parsed.append([])
                         sites = []
                         states = []
@@ -544,7 +590,6 @@ class ModelBuilder(Builder):
         reactions_to_process.extend(deepcopy(self.current_model.optional_reactions))
 
         for each in reactions_to_process:
-            # print each
             # collect reaction, the molecules involved, and their molecule types from the model reactions.
             reaction = each[0]
             molecules = []
@@ -553,7 +598,7 @@ class ModelBuilder(Builder):
             types = []
             param_values = []
             for item in each[1:]:
-                if ')' in item:
+                if ')' in item and '}' not in item:
                     molecules.append(item.split('(')[0])
                     molecule_types.append(item.split('(')[1][:-1])
                 elif '}' in item:
@@ -566,7 +611,6 @@ class ModelBuilder(Builder):
                     # tags.extend(item.strip()[1:-1].split('|'))
                 else:
                     param_values.append(item.strip())
-            # print tags
 
             # from reaction template substitute the corresponding molecules
             for mt in molecule_types:
@@ -576,9 +620,8 @@ class ModelBuilder(Builder):
                         reaction_name = each[0] + '_' + str(t)
                         for elem in each[1:]:
 
-                            if '(' in elem:
+                            if '(' in elem and '{' not in elem:
                                 reaction_name += '_' + elem.split('(')[0] + '_' + elem.split('(')[1][:-1]
-
                         self.reaction_names.append(reaction_name)
                         rxn = deepcopy(temp)
 
@@ -683,26 +726,36 @@ class ModelBuilder(Builder):
 
         # fill out monomer binding sites
         for i, rxn in enumerate(self.parsed_reactions):
-            # print
             dwdc = []
             for j, tag in enumerate(self.reaction_tags[i]):
-                # print tag
                 if tag:  # and ':' in tag:
-                    # print tag
                     tag_split = tag.split(':')
-                    # print tag_split
                     if tag_split[0] == 'dwdc':
                         dwdc.extend(tag_split[1:])
-
-            # print dwdc
+            for j, elem in enumerate(dwdc):
+                if '(' in elem:
+                    dwdc[j] = dwdc[j].split('(')
+                    dwdc[j][1] = dwdc[j][1][:-1].split(',')
+            print dwdc
             for j, elem in enumerate(rxn):
-                # print elem
                 if isinstance(elem, list):
-                    if elem[0] not in dwdc:
-                        for site in self.monomer_info[elem[0]]:
-                            if site not in self.parsed_reactions[i][j][1]:
-                                self.parsed_reactions[i][j][1].append(site)
-                                self.parsed_reactions[i][j][2].append('None')
+
+                    for site in self.monomer_info[elem[0]]:
+                        add_site = True
+                        for every in dwdc:
+                            # print every
+                            if elem[0] == every[0] and site in every[1]:
+                                add_site = False
+                        if add_site and site not in self.parsed_reactions[i][j][1]:
+                            self.parsed_reactions[i][j][1].append(site)
+                            self.parsed_reactions[i][j][2].append('None')
+
+
+                    # if elem[0] not in dwdc:
+                    #     for site in self.monomer_info[elem[0]]:
+                    #         if site not in self.parsed_reactions[i][j][1]:
+                    #             self.parsed_reactions[i][j][1].append(site)
+                    #             self.parsed_reactions[i][j][2].append('None')
 
         # process tags for reaction sequence information
         tags = {}
