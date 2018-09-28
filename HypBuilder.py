@@ -736,7 +736,7 @@ class ModelBuilder(Builder):
                 if '(' in elem:
                     dwdc[j] = dwdc[j].split('(')
                     dwdc[j][1] = dwdc[j][1][:-1].split(',')
-            print dwdc
+
             for j, elem in enumerate(rxn):
                 if isinstance(elem, list):
 
