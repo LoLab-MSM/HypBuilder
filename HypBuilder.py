@@ -118,7 +118,6 @@ class ModelAssembler:
             for i, each in enumerate(label_list):
                 if each:
                     for j, item in enumerate(each[:-1]):
-                        # print each[j].strip(), each[j+1].strip()
 
                         if each[j].strip()[0] == '{' and each[j+1].strip()[-1] == '}':
                             label_list[i][j] = label_list[i][j] + ',' + label_list[i][j+1]
@@ -234,8 +233,8 @@ class ModelAssembler:
                                     start, stop = float(param_range[0]), float(param_range[1])
                                     self.base_model.nodes[node].initial.extend(
                                         list(np.arange(start, stop, (stop - start) / (num-1))))
-                                    for i, every in enumerate(self.base_model.nodes[node].initial):
-                                        self.base_model.nodes[node].initial[i] = str(every)
+                                    for j, every in enumerate(self.base_model.nodes[node].initial):
+                                        self.base_model.nodes[node].initial[j] = str(every)
                                     self.base_model.nodes[node].initial.append(str(stop))
                                 # based on desired increment
                                 # example: 4-6:1 -> ['4.0', '5.0', '6.0']
@@ -246,8 +245,8 @@ class ModelAssembler:
                                     self.base_model.nodes[node].initial.extend(list(np.arange(start, stop, inc)))
                                     if stop - self.base_model.nodes[node].initial[-1] == inc:
                                         self.base_model.nodes[node].initial.append(stop)
-                                    for i, every in enumerate(self.base_model.nodes[node].initial):
-                                        self.base_model.nodes[node].initial[i] = str(every)
+                                    for j, every in enumerate(self.base_model.nodes[node].initial):
+                                        self.base_model.nodes[node].initial[j] = str(every)
 
                     if labels:
                         for lab in each[1:]:
@@ -590,6 +589,7 @@ class ModelBuilder(Builder):
         reactions_to_process.extend(deepcopy(self.current_model.optional_reactions))
 
         for each in reactions_to_process:
+
             # collect reaction, the molecules involved, and their molecule types from the model reactions.
             reaction = each[0]
             molecules = []
@@ -608,7 +608,6 @@ class ModelBuilder(Builder):
                             types.append(every.split(':')[1])
                         else:
                             tags.append(every)
-                    # tags.extend(item.strip()[1:-1].split('|'))
                 else:
                     param_values.append(item.strip())
 
@@ -646,12 +645,6 @@ class ModelBuilder(Builder):
                                 self.reaction_types[-1].append(types.pop(0))
                             else:
                                 self.reaction_types[-1].append(types.pop(0))
-                        # else:
-                        #     if '<>' in rxn or '|' in rxn:
-                        #         self.reaction_types[-1].append(None)
-                        #         self.reaction_types[-1].append(None)
-                        #     else:
-                        #         self.reaction_types[-1].append(None)
 
                         self.reaction_parameter_values.append([])
                         if param_values:
@@ -728,7 +721,7 @@ class ModelBuilder(Builder):
         for i, rxn in enumerate(self.parsed_reactions):
             dwdc = []
             for j, tag in enumerate(self.reaction_tags[i]):
-                if tag:  # and ':' in tag:
+                if tag:
                     tag_split = tag.split(':')
                     if tag_split[0] == 'dwdc':
                         dwdc.extend(tag_split[1:])
@@ -743,19 +736,11 @@ class ModelBuilder(Builder):
                     for site in self.monomer_info[elem[0]]:
                         add_site = True
                         for every in dwdc:
-                            # print every
                             if elem[0] == every[0] and site in every[1]:
                                 add_site = False
                         if add_site and site not in self.parsed_reactions[i][j][1]:
                             self.parsed_reactions[i][j][1].append(site)
                             self.parsed_reactions[i][j][2].append('None')
-
-
-                    # if elem[0] not in dwdc:
-                    #     for site in self.monomer_info[elem[0]]:
-                    #         if site not in self.parsed_reactions[i][j][1]:
-                    #             self.parsed_reactions[i][j][1].append(site)
-                    #             self.parsed_reactions[i][j][2].append('None')
 
         # process tags for reaction sequence information
         tags = {}
@@ -803,7 +788,6 @@ class ModelBuilder(Builder):
                                     self.parsed_reactions[tags[each][i][1]][j][1].append(thing[1])
                                     self.parsed_reactions[tags[each][i][1]][j][2].append('None')
 
-
         # enforce sequences of reactions
         for each in tags:
             tags[each] = sorted(tags[each])
@@ -836,7 +820,6 @@ class ModelBuilder(Builder):
                         effects.append(every)
                     if every == '<>' or every == '>>' or every == '|':
                         record = True
-
 
     def add_rules(self):
 
@@ -913,9 +896,6 @@ class ModelBuilder(Builder):
 
             # define rule expression
             rule_exp = RuleExpression(ReactionPattern(react_com_pats), ReactionPattern(prod_com_pats), reversible)
-
-            # for item, each in enumerate(self.reaction_types):
-            #     print each
 
             suffix0 = '_0'
             suffix1 = '_0'
