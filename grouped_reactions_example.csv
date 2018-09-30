@@ -15,8 +15,8 @@ inhibition, A(inhibitor), B(inh_target)
 
 optional reactions
 
-inhibition, B(inhibitor), C(inh_target), {g1|g2}
+inhibition, B(inhibitor), C(inh_target), {g1}
 inhibition, D(inhibitor), E(inh_target), {g1}
 inhibition, A(inhibitor), C(inh_target), {g2}
-inhibition, B(inhibitor), D(inh_target)
+inhibition, B(inhibitor), D(inh_target), {g2}
 
