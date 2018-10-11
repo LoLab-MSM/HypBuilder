@@ -334,6 +334,10 @@ class ModelAssembler:
                         if every[0] in op_re_gr:
                             op_re_gr[every[0]].append(each)
 
+        op_re_gr_bool = defaultdict(list)
+        for each in op_re_gr:
+            op_re_gr_bool[each] = [False for _ in op_re_gr[each]]
+
         reaction_combinations = []
         for i in range(len(self.base_model.optional_reactions) + 1):
             reaction_combinations.extend(list(combinations(self.base_model.optional_reactions, i)))
@@ -342,17 +346,18 @@ class ModelAssembler:
         for reaction_set in reaction_combinations:
             new_model = deepcopy(self.base_model)
 
+            # retain for now
             grouped = True
             for each in reaction_set:
                 for item in op_re_gr:
                     if each in op_re_gr[item]:
-
                         for every in op_re_gr[item]:
                             if every not in reaction_set:
                                 grouped = False
                                 break
                         if not grouped:
                             break
+
             if grouped:
 
                 new_model.optional_reactions = reaction_set
@@ -956,14 +961,24 @@ class ModelBuilder(Builder):
                     self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward],
                               self.model.parameters[reverse])
                 else:
-                    if self.is_float(self.reaction_parameter_values[i][0]):
-                        forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf' + '_0'
-                        self.parameter(forward, self.reaction_parameter_values[i][0])
-                    else:
-                        forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf'
-                        self.parameter(forward, 1)
+                    if order[1] == 1:
+                        if self.is_float(self.reaction_parameter_values[i][0]):
+                            forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf' + '_0'
+                            self.parameter(forward, self.reaction_parameter_values[i][0])
+                        else:
+                            forward = self.reaction_names[i] + '_' + str(order[0]) + 'kf'
+                            self.parameter(forward, 1)
 
-                    self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward])
+                        self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward])
+                    else:
+                        if self.is_float(self.reaction_parameter_values[i][0]):
+                            forward = self.reaction_names[i] + '_' + str(order[0]) + 'kc' + '_0'
+                            self.parameter(forward, self.reaction_parameter_values[i][0])
+                        else:
+                            forward = self.reaction_names[i] + '_' + str(order[0]) + 'kc'
+                            self.parameter(forward, 1)
+
+                        self.rule(self.reaction_names[i], rule_exp, self.model.parameters[forward])
 
     @staticmethod
     def random_binding(mols, pairs, binds):
