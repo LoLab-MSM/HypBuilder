@@ -11,6 +11,6 @@ D, 1
 
 required reactions
 
-binding, A(binder), B(binder_target)
-binding, B(binder), C(binder_target)
-binding, C(binder), D(binder_target)
+bind, A()[binder], B()[binder_target]
+bind, B()[binder], C()[binder_target]
+bind, C()[binder], D()[binder_target]

@@ -11,8 +11,8 @@ E, 5
 
 required reactions
 
-inhibition, D(inhibitor), E(inh_target), {f:5}
-inhibition, C(inhibitor), D(inh_target)
-inhibition, A(inhibitor), C(inh_target), {f:all}
-inhibition, B(inhibitor), C(inh_target)
+inhibition, D()[inhibitor], E()[inh_target], {f:5}
+inhibition, C()[inhibitor], D()[inh_target]
+inhibition, A()[inhibitor], C()[inh_target], {f:all}
+inhibition, B()[inhibitor], C()[inh_target]
 

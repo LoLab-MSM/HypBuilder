@@ -11,11 +11,11 @@ E, 1
 
 required reactions
 
-inhibition, D(inhibitor), E(inh_target)
+inhibition, D()[inhibitor], E()[inh_target]
 
 optional reactions
 
-inhibition, C(inhibitor), D(inh_target)
-inhibition, A(inhibitor), C(inh_target)
-inhibition, B(inhibitor), C(inh_target)
+inhibition, C()[inhibitor], D()[inh_target]
+inhibition, A()[inhibitor], C()[inh_target]
+inhibition, B()[inhibitor], C()[inh_target]
 

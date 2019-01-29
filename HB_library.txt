@@ -57,36 +57,60 @@ $$$
 
 molecule: binder
 ---
-reaction: binding
+reaction: bind
 direction: output
 target: binder_target
 $$$
-reaction: binding_1
+reaction: bind_1
 direction: output
 target: binder_target
 $$$
-reaction: binding_2
+reaction: bind_2
+direction: output
+target: binder_target
+$$$
+reaction: bind2
 direction: output
 target: binder_target
 $$$
 +++
 
+molecule: bound
+---
+reaction: bind2
+direction: output
+target: binder_target
+$$$
+reaction: bound_1_catalytic_step
+direction: output
+target: product
+$$$
++++
+
+
+
 molecule: binder_target
 ---
-reaction: binding
+reaction: bind
 direction: input
 reactant: binder
 template: binder(binder_target=None) + binder_target(binder=None) <> binder(binder_target=1) % binder_target(binder=1)
 $$$
-reaction: binding_1
+reaction: bind_1
 direction: input
 reactant: binder
 template: binder(binder_target=None) + binder_target(binder_1=None) <> binder(binder_target=1) % binder_target(binder_1=1)
 $$$
-reaction: binding_2
+reaction: bind_2
 direction: input
 reactant: binder
 template: binder(binder_target=None) + binder_target(binder_2=None) <> binder(binder_target=1) % binder_target(binder_2=1)
+$$$
+reaction: bind2
+direction: input
+reactant: bound
+reactant: binder
+template: bound(binder=1) % binder(bound=1, binder_target=None) + binder_target(binder=None) <> bound(binder=1) % binder(bound=1, binder_target=2) % binder_target(binder=2)
 $$$
 +++
 
@@ -126,7 +150,7 @@ $$$
 
 molecule: subunit_a
 ---
-reaction: dimer_binding
+reaction: binding
 direction: output
 target: subunit_b
 $$$
@@ -142,7 +166,7 @@ $$$
 
 molecule: subunit_b
 ---
-reaction: dimer_binding
+reaction: binding
 direction: input
 reactant: subunit_a
 template: subunit_a(subunit_b=None) + subunit_b(subunit_a=None) <> subunit_a(subunit_b=1) % subunit_b(subunit_a=1)
@@ -228,6 +252,10 @@ reaction: catalytic_step
 direction: output
 target: product
 $$$
+reaction: bound_1_catalytic_step
+direction: output
+target: product
+$$$
 +++
 
 molecule: substrate
@@ -241,6 +269,10 @@ reaction: catalytic_step
 direction: output
 target: product
 $$$
+reaction: bound_1_catalytic_step
+direction: output
+target: product
+$$$
 +++
 
 molecule: product
@@ -250,6 +282,13 @@ direction: input
 reactant: catalyzer
 reactant: substrate
 template: catalyzer(substrate=1) % substrate(catalyzer=1) >> catalyzer(substrate=None) + product()
+$$$
+reaction: bound_1_catalytic_step
+direction: input
+reactant: catalyzer
+reactant: substrate
+reactant: bound
+template: bound(catalyzer=1) % catalyzer(bound=1, substrate=2) % substrate(catalyzer=2) >> bound(catalyzer=1) % catalyzer(bound=1, substrate=None) % product()
 $$$
 reaction: catalysis
 direction: input
@@ -280,55 +319,187 @@ $$$
 molecule: redox_enzyme
 ---
 reaction: redox
-reactants: donor acceptor reduced oxidized
+reactant: donor acceptor reduced oxidized
 $$$
 +++
 
 molecule: donor
 ---
 reaction: redox
-reactants: redox_enzyme acceptor reduced oxidized
+reactant: redox_enzyme acceptor reduced oxidized
 $$$
 +++
 
 molecule: acceptor
 ---
 reaction: redox
-reactants: redox_enzyme donor reduced oxidized
+reactant: redox_enzyme donor reduced oxidized
 $$$
 +++
 
 molecule: reduced
 ---
 reaction: redox
-reactants: redox_enzyme donor acceptor oxidized
+reactant: redox_enzyme donor acceptor oxidized
 $$$
 +++
 
 molecule: oxidized
 ---
 reaction: redox
-reactants: redox_enzyme donor acceptor reduced
-template: redox_enzyme(donor=None, acceptor=None) + donor(redox_enzyme=None) | redox_enzyme(donor=1, acceptor=None) % donor(redox_enzyme=1)
-template: redox_enzyme(donor=1, acceptor=None) % donor(redox_enzyme=1) + acceptor(redox_enzyme=None) | redox_enzyme(donor=1, acceptor=2) % donor(redox_enzyme=1) % acceptor(redox_enzyme=2)
-template: redox_enzyme(donor=1, acceptor=2) % donor(redox_enzyme=1) % acceptor(redox_enzyme=2) >> redox_enzyme(donor=None, acceptor=None) + oxidized() + reduced()
+reactant: redox_enzyme donor acceptor reduced
+template: redox_enzyme(donor=None) + donor(redox_enzyme=None) | redox_enzyme(donor=1) % donor(redox_enzyme=1)
+template: redox_enzyme(donor=1) % donor(redox_enzyme=1) + acceptor() >> redox_enzyme(donor=None) + oxidized() + reduced()
 $$$
 +++
 
 molecule: convert_substrate
 ---
 reaction: conversion
-reactants: convert_product
+reactant: convert_product
 $$$
 +++
 
 molecule: convert_product
 ---
 reaction: conversion
-reactants: convert_substrate
+reactant: convert_substrate
 template: convert_substrate() >> convert_product
 $$$
 +++
+
+molecule: antioxidant
+---
+reaction: squelch
+reactant: free_radical
+$$$
++++
+
+molecule: free_radical
+---
+reaction: squelch
+reactant: antioxidant
+template: antioxidant() + free_radical() >> None
+$$$
++++
+
+molecule: factor
+---
+reaction: conf_change_and_release
+reactant: conf_target modified released
+$$$
+reaction: conf_change
+reactant: conf_target modified
+$$$
++++
+
+molecule: conf_target
+---
+reaction: conf_change_and_release
+reactant: factor modified released
+$$$
+reaction: conf_change
+reactant: factor modified
+$$$
+reaction: conf_reversion
+reactant: modified
+$$$
++++
+
+molecule: modified
+---
+reaction: conf_change_and_release
+reactant: conf_target factor released
+$$$
+reaction: conf_change
+reactant: conf_target factor
+template: factor() + conf_target() >> modified()
+$$$
+reaction: conf_reversion
+reactant: conf_target
+template: modified() >> conf_target()
+$$$
++++
+
+molecule: released
+---
+reaction: conf_change_and_release
+reactant: conf_target factor modified
+template: factor() + conf_target(released=1) % released(conf_target=1) >> modified() + released(conf_target=None)
+$$$
++++
+
+molecule: TF
+---
+reaction: transX2
+reactant: trans_product
+$$$
+reaction: TF_binding
+reactant: gene
+$$$
++++
+
+molecule: trans_product
+---
+reaction: transX2
+reactant: TF
+template: TF() >> TF() + trans_product()
+$$$
++++
+
+molecule: gene
+---
+reaction: TF_binding
+reactant: TF
+template: TF(gene=None) + gene(TF=None) <> TF(gene=1) % gene(TF=1)
+$$$
+reaction: transcription
+reactant: gene_product
+$$$
++++
+
+molecule: gene_product
+reaction: transcription
+reactant: gene
+template: gene() >> gene() + gene_product()
+$$$
++++
+
+molecule: allo_cat
+---
+reaction: allosteric_catalysis
+direction: output
+target: allo_pro
+$$$
++++
+
+molecule: allo_eff
+---
+reaction: allosteric_catalysis
+direction: output
+target: allo_pro
+$$$
++++
+
+molecule: allo_sub
+---
+reaction: allosteric_catalysis
+direction: output
+target: allo_pro
+$$$
++++
+
+molecule: allo_pro
+---
+reaction: allosteric_catalysis
+direction: input
+reactant: allo_cat
+reactant: allo_eff
+reactant: allo_sub
+template: allo_eff(allo_cat=1) % allo_cat(allo_eff=1, allo_sub=2) % allo_sub(allo_cat=2) >> allo_eff(allo_cat=1) % allo_cat(allo_eff=1, allo_sub=None) + allo_pro()
+$$$
++++
+
 
 
 

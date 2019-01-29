@@ -1,0 +1,13 @@
+
+model components
+
+A, 1
+B, 1
+C, 1
+D, 1
+
+required reactions
+
+bind, A(site_B_on_A)[binder], B()[binder_target]
+bind, B()[binder], C(site_B_on_C)[binder_target]
+bind, C(site_D_on_C)[binder], D()[binder_target]

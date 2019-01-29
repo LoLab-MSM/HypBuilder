@@ -1,5 +1,7 @@
 
 # a model for each combination of optional reactions will be constructed
+# if reactions are grouped in a disjoint set then other reactions, aside
+# from required reactions, cannot be present along side them
 
 model components
 
@@ -11,12 +13,12 @@ E, 1
 
 required reactions
 
-inhibition, A(inhibitor), B(inh_target)
+inhibition, A()[inhibitor], B()[inh_target]
 
 optional reactions
 
-inhibition, B(inhibitor), C(inh_target), {g1}
-inhibition, D(inhibitor), E(inh_target), {g1}
-inhibition, A(inhibitor), C(inh_target), {g2}
-inhibition, B(inhibitor), D(inh_target), {g2}
+inhibition, B()[inhibitor], C()[inh_target], {disjoint:1}
+inhibition, D()[inhibitor], E()[inh_target], {disjoint:1}
+inhibition, A()[inhibitor], C()[inh_target], {group:2}
+inhibition, B()[inhibitor], D()[inh_target], {group:2}
 

@@ -8,6 +8,6 @@ D, 1
 
 required reactions
 
-binding, A(binder), B(binder_target), {s1:1}
-binding, B(binder), C(binder_target), {s1:2}
-binding, C(binder), D(binder_target), {s1:3}
+bind, A()[binder], B()[binder_target], {s1:1}
+bind, B()[binder], C()[binder_target], {s1:2}
+bind, C()[binder], D()[binder_target], {s1:3}

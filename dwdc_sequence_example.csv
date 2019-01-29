@@ -11,8 +11,8 @@ E, 1
 
 required reactions
 
-inhibition, D(inhibitor), E(inh_target)
-inhibition, C(inhibitor), D(inh_target), {dwdc:C(B)|s1:2}
-inhibition, A(inhibitor), C(inh_target), {s1:1}
-inhibition, B(inhibitor), C(inh_target)
+inhibition, D()[inhibitor], E()[inh_target]
+inhibition, C()[inhibitor], D()[inh_target], {dwdc:C(B)|s1:2}
+inhibition, A()[inhibitor], C()[inh_target], {s1:1}
+inhibition, B()[inhibitor], C()[inh_target]
 

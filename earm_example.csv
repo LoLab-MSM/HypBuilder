@@ -43,43 +43,43 @@ Noxa, 0
 
 required reactions
 
-dimerization, L(subunit_a), R(subunit_b), DISC(dimer), 4.8610717169040878e-09, 6.9984651157346155e-05, 0.0001004038401598357
-catalysis, DISC(catalyzer), C8pro(substrate), C8A(product), 1.652610985853028e-06, 0.00025515949741149136, 8.1035483807450976
-catalysis, C8A(catalyzer), BidU(substrate), BidT(product), 7.8693418477379699e-06, 1.3478527255190856e-05, 0.20070834648071373
-inhibition, flip(inhibitor), DISC(inh_target), 2.0857207094671021e-06, 0.072993081874092425
-inhibition, BAR(inhibitor), C8A(inh_target), 2.450754439292685e-05, 3.176107099863868e-05
-equilibration, SmacC(equil_a), SmacA(equil_b), 0.68667658617411753, 0.00077853445949019686
-equilibration, CytoCC(equil_a), CytoCA(equil_b), 0.020412343795425145, 0.0025071607534728909
-catalysis, CytoCA(catalyzer), ApafI(substrate), ApafA(product), 4.5927585852137639e-07, 2.8999962220310582e-05, 0.040599717918061738
-conversion, C9(subunit_d), ApafA(subunit_c), Apop(complex), 3.213196857547145e-07, 0.011684477645560146
-catalysis, Apop(catalyzer), C3pro(substrate), C3A(product), 7.8037691005466737e-10, 0.00032802481823310378, 1.1684643810480766
-inhibition, XIAP(inhibitor), Apop(inh_target), 2.0704535531682789e-08, 0.0013859740873431536
-inhibition, SmacA(inhibitor), XIAP(inh_target), 0.00040944017917514478, 0.0080051134954001509
-catalysis, C8A(catalyzer), C3pro(substrate), C3A(product), 1.9167619114268919e-06, 0.00010186532359752733, 2.7002149431488567
-catalysis, XIAP(catalyzer), C3A(substrate), C3ub(product), 1.8247861512403385e-07, 1.2921875123372521e-05, 0.099504980631579837
-catalysis, C3A(catalyzer), PARPU(substrate), PARPC(product), 1.889526802914492e-06, 0.00011387916767652634, 13.768204206283402
-catalysis, C3A(catalyzer), C6pro(substrate), C6A(product), 2.1334646851306905e-08, 0.0015363069332776634, 13.054054125378238
-catalysis, C6A(catalyzer), C8pro(substrate), C8A(product), 5.0560841288642224e-08, 9.1977396575087457e-05, 0.18488607021092679
-equilibration, BidT(equil_a), BidM(equil_b), 0.026956531627050594, 1.1783387334989619e-05
-equilibration, BaxC(equil_a), BaxM(equil_b), 0.0003405873853519951, 0.049750332184525257
-equilibration, BclxLC(equil_a), BclxLM(equil_b), 0.068400564450976198, 0.14118753123479355
-catalysis, BidM(catalyzer), BaxM(substrate), BaxA(product), 3.9736775946970058e-09, 0.021482642730885865, 1.8203763301683924
-catalysis, BidM(catalyzer), BakM(substrate), BakA(product), 1.9408461301064605e-09, 0.00018094808868168103, 0.011177441271776072
-self_catalyze, BaxA(self_catalyzer), BaxM(self_substrate), 2.0149060250585873e-06, 0.040311275999739105, 0.012192887363178946
-self_catalyze, BakA(self_catalyzer), BakM(self_substrate), 5.3939824626322183e-06, 0.002166628073982069, 0.26475473643878961
-inhibition, Bcl2(inhibitor), BidM(inh_target), 1.0277423337470143e-06, 2.7905757973936867
-inhibition, BclxLM(inhibitor), BidM(inh_target), 1.6367225985110056e-07, 0.026264964906836046
-inhibition, Mcl1(inhibitor), BidM(inh_target), 1.9428423606297654e-06, 0.0021648330129469106
-inhibition, Bcl2(inhibitor), BaxA(inh_target), 1.4531081303335626e-08, 0.071917529283017381
-inhibition, BclxLM(inhibitor), BaxA(inh_target), 1.2086000195405126e-06, 0.019684909992630065
-inhibition, BclxLM(inhibitor), BakA(inh_target), 6.2674545719585416e-06, 0.067298588389140615
-inhibition, Mcl1(inhibitor), BakA(inh_target), 1.2661363465041514e-05, 0.0002157216265888175
-inhibition, Bad(inhibitor), Bcl2(inh_target), 5.3931067181433528e-05, 0.44013378070735282
-inhibition, Bad(inhibitor), BclxLM(inh_target), 4.1877529969310183e-05, 0.16263349657520218
-inhibition, Noxa(inhibitor), Mcl1(inh_target), 6.1197384627538123e-07, 0.01966269798058537
-pore_formation, BaxA(pore), 0.0067429287574002307, 1.6822795105298417e-05, 0.00029378841202344446, 0.000144616, 0.000085651, 0.002585238
-pore_formation, BakA(pore), 1.6054164088484109e-05, 0.00023979936345611174, 5.7415804556553368e-06, 0.021389853, 1.509873703e-05, 1.538796535e-05
-transport, BaxA(pore), CytoCM(cargo_M), CytoCC(cargo_C), 0.000106028, 0.0013725161741816323, 727.3165367902302
-transport, BaxA(pore), SmacM(cargo_M), SmacC(cargo_C), 2.375382573e-06, 0.00036936772401878048, 83.182122265178961
-transport, BakA(pore), CytoCM(cargo_M), CytoCC(cargo_C), 0.354927953e-06, 0.051294040280582424, 1.0588991714689346
-transport, BakA(pore), SmacM(cargo_M), SmacC(cargo_C), 2.40631696e-05, 0.00061884308859702392, 16.739408086871173
+dimerization, L()[subunit_a], R()[subunit_b], DISC()[dimer], 4.8610717169040878e-09, 6.9984651157346155e-05, 0.0001004038401598357
+catalysis, DISC()[catalyzer], C8pro()[substrate], C8A()[product], 1.652610985853028e-06, 0.00025515949741149136, 8.1035483807450976
+catalysis, C8A()[catalyzer], BidU()[substrate], BidT()[product], 7.8693418477379699e-06, 1.3478527255190856e-05, 0.20070834648071373
+inhibition, flip()[inhibitor], DISC()[inh_target], 2.0857207094671021e-06, 0.072993081874092425
+inhibition, BAR()[inhibitor], C8A()[inh_target], 2.450754439292685e-05, 3.176107099863868e-05
+equilibration, SmacC()[equil_a], SmacA()[equil_b], 0.68667658617411753, 0.00077853445949019686
+equilibration, CytoCC()[equil_a], CytoCA()[equil_b], 0.020412343795425145, 0.0025071607534728909
+catalysis, CytoCA()[catalyzer], ApafI()[substrate], ApafA()[product], 4.5927585852137639e-07, 2.8999962220310582e-05, 0.040599717918061738
+conversion, C9()[subunit_d], ApafA()[subunit_c], Apop()[complex], 3.213196857547145e-07, 0.011684477645560146
+catalysis, Apop()[catalyzer], C3pro()[substrate], C3A()[product], 7.8037691005466737e-10, 0.00032802481823310378, 1.1684643810480766
+inhibition, XIAP()[inhibitor], Apop()[inh_target], 2.0704535531682789e-08, 0.0013859740873431536
+inhibition, SmacA()[inhibitor], XIAP()[inh_target], 0.00040944017917514478, 0.0080051134954001509
+catalysis, C8A()[catalyzer], C3pro()[substrate], C3A()[product], 1.9167619114268919e-06, 0.00010186532359752733, 2.7002149431488567
+catalysis, XIAP()[catalyzer], C3A()[substrate], C3ub()[product], 1.8247861512403385e-07, 1.2921875123372521e-05, 0.099504980631579837
+catalysis, C3A()[catalyzer], PARPU()[substrate], PARPC()[product], 1.889526802914492e-06, 0.00011387916767652634, 13.768204206283402
+catalysis, C3A()[catalyzer], C6pro()[substrate], C6A()[product], 2.1334646851306905e-08, 0.0015363069332776634, 13.054054125378238
+catalysis, C6A()[catalyzer], C8pro()[substrate], C8A()[product], 5.0560841288642224e-08, 9.1977396575087457e-05, 0.18488607021092679
+equilibration, BidT()[equil_a], BidM()[equil_b], 0.026956531627050594, 1.1783387334989619e-05
+equilibration, BaxC()[equil_a], BaxM()[equil_b], 0.0003405873853519951, 0.049750332184525257
+equilibration, BclxLC()[equil_a], BclxLM()[equil_b], 0.068400564450976198, 0.14118753123479355
+catalysis, BidM()[catalyzer], BaxM()[substrate], BaxA()[product], 3.9736775946970058e-09, 0.021482642730885865, 1.8203763301683924
+catalysis, BidM()[catalyzer], BakM()[substrate], BakA()[product], 1.9408461301064605e-09, 0.00018094808868168103, 0.011177441271776072
+self_catalyze, BaxA()[self_catalyzer], BaxM()[self_substrate], 2.0149060250585873e-06, 0.040311275999739105, 0.012192887363178946
+self_catalyze, BakA()[self_catalyzer], BakM()[self_substrate], 5.3939824626322183e-06, 0.002166628073982069, 0.26475473643878961
+inhibition, Bcl2()[inhibitor], BidM()[inh_target], 1.0277423337470143e-06, 2.7905757973936867
+inhibition, BclxLM()[inhibitor], BidM()[inh_target], 1.6367225985110056e-07, 0.026264964906836046
+inhibition, Mcl1()[inhibitor], BidM()[inh_target], 1.9428423606297654e-06, 0.0021648330129469106
+inhibition, Bcl2()[inhibitor], BaxA()[inh_target], 1.4531081303335626e-08, 0.071917529283017381
+inhibition, BclxLM()[inhibitor], BaxA()[inh_target], 1.2086000195405126e-06, 0.019684909992630065
+inhibition, BclxLM()[inhibitor], BakA()[inh_target], 6.2674545719585416e-06, 0.067298588389140615
+inhibition, Mcl1()[inhibitor], BakA()[inh_target], 1.2661363465041514e-05, 0.0002157216265888175
+inhibition, Bad()[inhibitor], Bcl2()[inh_target], 5.3931067181433528e-05, 0.44013378070735282
+inhibition, Bad()[inhibitor], BclxLM()[inh_target], 4.1877529969310183e-05, 0.16263349657520218
+inhibition, Noxa()[inhibitor], Mcl1()[inh_target], 6.1197384627538123e-07, 0.01966269798058537
+pore_formation, BaxA(p1:p2)[pore], 0.0067429287574002307, 1.6822795105298417e-05, 0.00029378841202344446, 0.000144616, 0.000085651, 0.002585238
+pore_formation, BakA()[pore], 1.6054164088484109e-05, 0.00023979936345611174, 5.7415804556553368e-06, 0.021389853, 1.509873703e-05, 1.538796535e-05
+transport, BaxA(p1:p2)[pore], CytoCM()[cargo_M], CytoCC()[cargo_C], 0.000106028, 0.0013725161741816323, 727.3165367902302
+transport, BaxA(p1:p2)[pore], SmacM()[cargo_M], SmacC()[cargo_C], 2.375382573e-06, 0.00036936772401878048, 83.182122265178961
+transport, BakA()[pore], CytoCM()[cargo_M], CytoCC()[cargo_C], 0.354927953e-06, 0.051294040280582424, 1.0588991714689346
+transport, BakA()[pore], SmacM()[cargo_M], SmacC()[cargo_C], 2.40631696e-05, 0.00061884308859702392, 16.739408086871173
