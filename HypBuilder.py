@@ -251,7 +251,7 @@ class ModelAssembler:
                     if labels:
                         for lab in each[1:]:
                             if lab.strip() not in self.base_model.library:
-                                print lab, 'not in library'
+                                print('%s not in library', lab)
                                 quit()
                             else:
                                 self.base_model.nodes[each[0].strip()].labels.append(lab.strip())
@@ -264,10 +264,10 @@ class ModelAssembler:
                                 item = item.split('(')
                                 item[1] = item[1].split('[')[1][:-1]
                                 if item[1] not in self.base_model.library:
-                                    print item[1], 'not in library'
+                                    print('%s not in library', item[1])
                                     quit()
                                 if item[0] not in self.base_model.nodes:
-                                    print item[0], 'not in molecule list'
+                                    print('%s not in molecule list', item[0])
                                     quit()
                                 # labels are probably not necessary at the moment
                                 # but could be relevant later
@@ -282,10 +282,10 @@ class ModelAssembler:
                                 item = item.split('(')
                                 item[1] = item[1].split('[')[1][:-1]
                                 if item[1] not in self.base_model.library:
-                                    print item[1], 'not in library'
+                                    print('%s not in library', item[1])
                                     quit()
                                 if item[0] not in self.base_model.nodes:
-                                    print item[0], 'not in molecule list'
+                                    print('%s not in molecule list', item[0])
                                     quit()
                                 # labels are probably not necessary at the moment
                                 # but could be relevant later
@@ -328,13 +328,8 @@ class ModelAssembler:
 
         disjoint_list = []
         for each in disjoint:
-            # print each, disjoint[each]
             for item in disjoint[each]:
                 disjoint_list.append(item)
-
-        # for each in disjoint_list:
-        #     print each
-        # quit()
 
         # todo: For autonomous search of the model space, checks for complete reactions will need to be made.
         # todo: Connectivity will need to be considered.
@@ -671,25 +666,15 @@ class ModelBuilder(Builder):
                 else:
                     param_values.append(item.strip())
 
-            # print molecules
-            # print site_labels
-            # print molecule_types
-            # print tags
-            # print types
-            # print param_values
-            # print
-
             # from reaction template substitute the corresponding molecules
             for mt in molecule_types:
                 if reaction in self.parsed_templates[mt] and self.parsed_templates[mt][reaction]:
 
                     for t, temp in enumerate(self.parsed_templates[mt][reaction]):
                         reaction_name = each[0] + '_' + str(t)
-                        # print each
                         for elem in each[1:]:
 
                             if '[' in elem and '{' not in elem:
-                                # print elem
                                 if '()' in elem:
                                     reaction_name += '_' + elem.split('[')[0].split('(')[0] + '_' + elem.split('[')[1][:-1]
                                 else:
@@ -697,17 +682,11 @@ class ModelBuilder(Builder):
                                     site_str = '_'.join(site_str)
                                     reaction_name += '_' + elem.split('[')[0].split('(')[0] + '_' + elem.split('[')[1][:-1] + '_' + site_str
 
-                        # print reaction_name
-                        # quit()
                         self.reaction_names.append(reaction_name)
                         rxn = deepcopy(temp)
-                        # print rxn
-                        # print
-                        # quit()
 
                         for i, elem in enumerate(rxn):
                             if isinstance(elem, list):
-                                # print elem
                                 mol_ind = None
 
                                 for j, mol_typ in enumerate(molecule_types):
@@ -715,13 +694,11 @@ class ModelBuilder(Builder):
                                         mol_ind = deepcopy(j)
                                         rxn[i][0] = molecules[j]
                                 for j, every in enumerate(elem[1]):
-                                    # print j, every
                                     if j <= len(site_labels[mol_ind])-1:
                                         rxn[i][1][j] = site_labels[mol_ind][j]
                                     else:
                                         for k, mol_typ in enumerate(molecule_types):
                                             if every == mol_typ:
-                                                # print 'yes', every
                                                 rxn[i][1][j] = molecules[k]
                                             if '_' in every and every.split('_')[0] == mol_typ \
                                                     and every.split('_')[1].isdigit():
@@ -730,25 +707,20 @@ class ModelBuilder(Builder):
 
                         # for i, elem in enumerate(rxn):
                         #     if isinstance(elem, list):
-                        #         # print
-                        #         # print elem
                         #         for j, mol_typ in enumerate(molecule_types):
                         #             if elem[0] == mol_typ:
                         #                 rxn[i][0] = molecules[j]
-                        #                 # print 't', molecules[j]
                         #             for k, every in enumerate(elem[1]):
                         #                 if every == mol_typ:
-                        #                     # print k, every
                         #                     rxn[i][1][k] = molecules[j]
                         #                 if '_' in every and every.split('_')[0] == mol_typ \
                         #                         and every.split('_')[1].isdigit():
                         #                     rxn[i][1][k] = molecules[j] + '_' + every.split('_')[1]
-                        # print
-                        # print rxn
+
                         self.reaction_tags.append(tags)
                         self.parsed_reactions.append(rxn)
                         self.reaction_types.append([])
-                        # quit()
+
                         # todo: remove? reaction_types? don't believe this is used anymore
                         if types:
                             if '<>' in rxn or '|' in rxn:
@@ -816,7 +788,6 @@ class ModelBuilder(Builder):
         # fill monomer info
         monomers_list = []
         for each in self.parsed_reactions:
-            # print each
             for item in each:
                 if isinstance(item, list):
                     # if item[0] not in monomers_list:
@@ -1175,14 +1146,18 @@ class ModelBuilder(Builder):
         for i, each in enumerate(specific_binding_quant):
             if each > specific_molecule_quant[specific_binding_pairs[i][0]] \
                     or each > specific_molecule_quant[specific_binding_pairs[i][1]]:
-                print 'The specified number for the bound species', specific_molecules[
-                    specific_binding_pairs[i][0]], '%', specific_molecules[specific_binding_pairs[i][1]], \
-                    'is', str(each) + '.\n', 'The number of molecules for', specific_molecules[
-                    specific_binding_pairs[i][0]], 'and', specific_molecules[specific_binding_pairs[i][1]], 'are', \
-                    specific_molecule_quant[specific_binding_pairs[i][0]], 'and', specific_molecule_quant[
-                    specific_binding_pairs[i][1]], 'respectively.\nThe number of molecules for both monomers must ' \
-                                                   'be at least as great as the specified number for the bound species.'
+
+                print('The specified number for the bound species %s %% %s is %s.\n The number of molecules for %s and'
+                      ' %s are %s and %s repectively. \nThe number of molecules for both monomers must be at least as '
+                      'great as the specified munber of the bound species.',
+                      specific_molecules[specific_binding_pairs[i][0]],
+                      specific_molecules[specific_binding_pairs[i][1]],
+                      str(each), specific_molecules[specific_binding_pairs[i][0]],
+                      specific_molecules[specific_binding_pairs[i][1]],
+                      specific_molecule_quant[specific_binding_pairs[i][0]],
+                      specific_molecule_quant[specific_binding_pairs[i][1]])
                 quit()
+
             specific_molecule_quant[specific_binding_pairs[i][0]] -= each
             specific_molecule_quant[specific_binding_pairs[i][1]] -= each
         for i, each in enumerate(specific_molecules):
