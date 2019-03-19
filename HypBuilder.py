@@ -1257,7 +1257,7 @@ class ModelBuilder(Builder):
         if self.obs == 'species':
             generate_equations(self.model)
             for each in self.model.species:
-                print each
+
                 species = str(each)
                 obs_name = ''
                 app = True
@@ -1272,9 +1272,5 @@ class ModelBuilder(Builder):
                         obs_name += '__'
                     if char == '%':
                         obs_name += '__BOUND__'
-                print obs_name
-                print
 
-                # print obs_name
-                # print
                 self.observable(obs_name, each)
