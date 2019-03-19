@@ -10,6 +10,8 @@ from pysb.core import MonomerPattern, ComplexPattern, RuleExpression, ReactionPa
 from numpy.random import choice
 from pysb.export.pysb_flat import PysbFlatExporter
 import os
+from pysb.bng import generate_network
+from pysb.bng import generate_equations
 
 
 class Node:
@@ -51,10 +53,11 @@ class Model:
 
 class ModelAssembler:
 
-    def __init__(self, library, model_description):
+    def __init__(self, library, model_description, obs='monomers'):
         self.base_model = Model()
         self.import_library(library)
         self.import_labels(model_description)
+        self.obs = obs
         self.models = []
         self.enumerate_models()
         self.remove_useless_models()
@@ -548,7 +551,7 @@ class ModelAssembler:
         model_index = 0
         for n, model in enumerate(self.models):
             if len(model.optional_reactions) + len(model.required_reactions) > 0:
-                ModelBuilder(model_index, model)
+                ModelBuilder(model_index, model, self.obs)
                 model_index += 1
 
 
@@ -556,11 +559,12 @@ class ModelBuilder(Builder):
     """
     Build a PySB model.
     """
-    def __init__(self, num, model):
+    def __init__(self, num, model, obs):
 
         super(ModelBuilder, self).__init__()
-        self.current_model = model
         self.num = num
+        self.current_model = model
+        self.obs = obs
         self.parsed_templates = defaultdict(lambda: defaultdict(list))
         self.parsed_reactions = []
         self.reaction_tags = []
@@ -1244,7 +1248,33 @@ class ModelBuilder(Builder):
     def add_observables(self):
 
         # add observable for each monomer in model
-        # for each in self.current_model.nodes:
-        for each in self.monomer_info:
-            obs_name = each + '_obs'
-            self.observable(obs_name, self.model.monomers[each])
+        if self.obs == 'monomers':
+            for each in self.monomer_info:
+                obs_name = each + '_obs'
+                self.observable(obs_name, self.model.monomers[each])
+
+        # add all species as observables
+        if self.obs == 'species':
+            generate_equations(self.model)
+            for each in self.model.species:
+                print each
+                species = str(each)
+                obs_name = ''
+                app = True
+                for char in species:
+                    if char == '(':
+                        obs_name += '__'
+                    if app and char != '(' and char != ')' and char != '=' and char != ',' and char != ' ' and char != '%':
+                        obs_name += char
+                    if char == '=':
+                        obs_name += '_'
+                    if char == ',':
+                        obs_name += '__'
+                    if char == '%':
+                        obs_name += '__BOUND__'
+                print obs_name
+                print
+
+                # print obs_name
+                # print
+                self.observable(obs_name, each)
