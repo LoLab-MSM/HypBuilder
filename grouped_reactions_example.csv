@@ -21,4 +21,5 @@ inhibition, B()[inhibitor], C()[inh_target], {disjoint:1}
 inhibition, D()[inhibitor], E()[inh_target], {disjoint:1}
 inhibition, A()[inhibitor], C()[inh_target], {group:2}
 inhibition, B()[inhibitor], D()[inh_target], {group:2}
+inhibition, A()[inhibitor], D()[inh_target]
 

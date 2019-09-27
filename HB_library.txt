@@ -1,505 +1,154 @@
 
 molecule: pore
----
 reaction: pore_formation
-direction: self
 template: pore(pore_1=None, pore_2=None) + pore(pore_1=None, pore_2=None) <> pore(pore_1=None, pore_2=1) % pore(pore_1=1, pore_2=None)
 template: pore(pore_1=None, pore_2=None) + pore(pore_1=None, pore_2=1) % pore(pore_1=1, pore_2=None) <> pore(pore_1=3, pore_2=1) % pore(pore_1=1, pore_2=2) % pore(pore_1=2, pore_2=3)
 template: pore(pore_1=None, pore_2=None) + pore(pore_1=3, pore_2=1) % pore(pore_1=1, pore_2=2) % pore(pore_1=2, pore_2=3) <> pore(pore_1=4, pore_2=1) % pore(pore_1=1, pore_2=2) % pore(pore_1=2, pore_2=3) % pore(pore_1=3, pore_2=4)
 $$$
-reaction: transport_binding
-direction: output
-target: cargo_M
-$$$
-reaction: transport_step
-direction: output
-target: cargo_C
-$$$
-reaction: transport
-direction: output
-target: cargo_C
-$$$
 +++
 
 molecule: cargo_M
----
 reaction: transport_binding
-direction: input
-reactant: pore
 template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_M(pore=None) <> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5)
-$$$
-reaction: transport_step
-direction: output
-target: cargo_C
-$$$
-reaction: transport
-direction: output
-target: cargo_C
 $$$
 +++
 
 molecule: cargo_C
----
 reaction: transport_step
-direction: input
-reactant: pore
-reactant: cargo_M
 template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5) >> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_C()
 $$$
 reaction: transport
-direction: input
-reactant: pore
-reactant: cargo_M
 template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_M(pore=None) <> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5)
 template: pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=5) % cargo_M(pore=5) >> pore(pore_1=4, pore_2=1, cargo_M=None) % pore(pore_1=1, pore_2=2, cargo_M=None) % pore(pore_1=2, pore_2=3, cargo_M=None) % pore(pore_1=3, pore_2=4, cargo_M=None) + cargo_C()
 $$$
 +++
 
+molecule: subunit_1
++++
+
+molecule: subunit_2
++++
+
+molecule: subunit_3
++++
+
+molecule: subunit_4
+reaction: sequential_binding
+template: subunit_1(subunit_2=None) + subunit_2(subunit_1=None, subunit_3=None) <> subunit_1(subunit_2=1) % subunit_2(subunit_1=1, subunit_3=None)
+template: subunit_1(subunit_2=1) % subunit_2(subunit_1=1, subunit_3=None) + subunit_3(subunit_2=None, subunit_4=None) <> subunit_1(subunit_2=1) % subunit_2(subunit_1=1, subunit_3=2) % subunit_3(subunit_2=2, subunit_4=None)
+template: subunit_1(subunit_2=1) % subunit_2(subunit_1=1, subunit_3=2) % subunit_3(subunit_2=2, subunit_4=None) + subunit_4(subunit_3=None) <> subunit_1(subunit_2=1) % subunit_2(subunit_1=1, subunit_3=2) % subunit_3(subunit_2=2, subunit_4=3) % subunit_4(subunit_3=3)
+$$$
++++
+
 molecule: binder
----
-reaction: bind
-direction: output
-target: binder_target
-$$$
-reaction: bind_1
-direction: output
-target: binder_target
-$$$
-reaction: bind_2
-direction: output
-target: binder_target
-$$$
-reaction: bind2
-direction: output
-target: binder_target
-$$$
 +++
 
 molecule: bound
----
-reaction: bind2
-direction: output
-target: binder_target
-$$$
-reaction: bound_1_catalytic_step
-direction: output
-target: product
-$$$
 +++
 
-
-
 molecule: binder_target
----
 reaction: bind
-direction: input
-reactant: binder
 template: binder(binder_target=None) + binder_target(binder=None) <> binder(binder_target=1) % binder_target(binder=1)
 $$$
 reaction: bind_1
-direction: input
-reactant: binder
 template: binder(binder_target=None) + binder_target(binder_1=None) <> binder(binder_target=1) % binder_target(binder_1=1)
 $$$
 reaction: bind_2
-direction: input
-reactant: binder
 template: binder(binder_target=None) + binder_target(binder_2=None) <> binder(binder_target=1) % binder_target(binder_2=1)
 $$$
 reaction: bind2
-direction: input
-reactant: bound
-reactant: binder
 template: bound(binder=1) % binder(bound=1, binder_target=None) + binder_target(binder=None) <> bound(binder=1) % binder(bound=1, binder_target=2) % binder_target(binder=2)
 $$$
 +++
 
 molecule: inhibitor
----
-reaction: inhibition
-direction: output
-target: inh_target
-$$$
 +++
 
 molecule: inh_target
----
 reaction: inhibition
-direction: input
-reactant: inhibitor
 template: inhibitor(inh_target=None) + inh_target(inhibitor=None) <> inhibitor(inh_target=1) % inh_target(inhibitor=1)
 $$$
 +++
 
 molecule: activator
----
-reaction: activation
-direction: output
-target: act_target
-$$$
 +++
 
 molecule: act_target
----
 reaction: activation
-direction: input
-reactant: activator
 template: activator(act_target=None) + act_target(activator=None) <> activator(act_target=1) % act_target(activator=1)
 $$$
 +++
 
 molecule: subunit_a
----
-reaction: binding
-direction: output
-target: subunit_b
-$$$
-reaction: dimerization_step
-direction: output
-target: dimer
-$$$
-reaction: dimerization
-direction: output
-target: dimer
-$$$
 +++
 
 molecule: subunit_b
----
 reaction: binding
-direction: input
-reactant: subunit_a
 template: subunit_a(subunit_b=None) + subunit_b(subunit_a=None) <> subunit_a(subunit_b=1) % subunit_b(subunit_a=1)
-$$$
-reaction: dimerization_step
-direction: output
-target: dimer
-$$$
-reaction: dimerization
-direction: output
-target: dimer
 $$$
 +++
 
 molecule: dimer
----
 reaction: dimerization_step
-direction: input
-reactant: subunit_a
-reactant: subunit_b
 template: subunit_a(subunit_b=1) % subunit_b(subunit_a=1) >> dimer()
 $$$
 reaction: dimerization
-direction: input
-reactant: subunit_a
-reactant: subunit_b
 template: subunit_a(subunit_b=None) + subunit_b(subunit_a=None) <> subunit_a(subunit_b=1) % subunit_b(subunit_a=1)
 template: subunit_a(subunit_b=1) % subunit_b(subunit_a=1) >> dimer()
 $$$
 +++
 
 molecule: subunit_c
----
-reaction: conversion
-direction: output
-target: complex
-$$$
 +++
 
 molecule: subunit_d
----
-reaction: conversion
-direction: output
-target: complex
-$$$
 +++
 
 molecule: complex
----
 reaction: conversion
-direction: input
-reactant: subunit_c
-reactant: subunit_d
 template: subunit_c() + subunit_d() <> complex()
 $$$
 +++
 
 molecule: self_substrate
----
 reaction: self_catalyze
-direction: input
-reactant: self_catalyzer
 template: self_catalyzer(self_substrate=None) + self_substrate(self_catalyzer=None) <> self_catalyzer(self_substrate=1) % self_substrate(self_catalyzer=1)
 template: self_catalyzer(self_substrate=1) % self_substrate(self_catalyzer=1) >> self_catalyzer(self_substrate=None) + self_catalyzer(self_substrate=None)
 $$$
 +++
 
 molecule: self_catalyzer
----
-reaction: self_catalyze
-direction: output
-target: self_substrate
-$$$
 +++
 
 molecule: catalyzer
----
-reaction: substrate_binding
-direction: output
-target: substrate
-$$$
-reaction: catalytic_step
-direction: output
-target: product
-$$$
-reaction: bound_1_catalytic_step
-direction: output
-target: product
-$$$
 +++
 
 molecule: substrate
----
 reaction: substrate_binding
-direction: input
-reactant: catalyzer
 template: catalyzer(substrate=None) + substrate(catalyzer=None) <> catalyzer(substrate=1) % substrate(catalyzer=1)
-$$$
-reaction: catalytic_step
-direction: output
-target: product
-$$$
-reaction: bound_1_catalytic_step
-direction: output
-target: product
 $$$
 +++
 
 molecule: product
----
 reaction: catalytic_step
-direction: input
-reactant: catalyzer
-reactant: substrate
 template: catalyzer(substrate=1) % substrate(catalyzer=1) >> catalyzer(substrate=None) + product()
 $$$
 reaction: bound_1_catalytic_step
-direction: input
-reactant: catalyzer
-reactant: substrate
-reactant: bound
 template: bound(catalyzer=1) % catalyzer(bound=1, substrate=2) % substrate(catalyzer=2) >> bound(catalyzer=1) % catalyzer(bound=1, substrate=None) % product()
 $$$
 reaction: catalysis
-direction: input
-reactant: catalyzer
-reactant: substrate
 template: catalyzer(substrate=None) + substrate(catalyzer=None) <> catalyzer(substrate=1) % substrate(catalyzer=1)
 template: catalyzer(substrate=1) % substrate(catalyzer=1) >> catalyzer(substrate=None) + product()
 $$$
 +++
 
 molecule: equil_a
----
-reaction: equilibration
-direction: output
-target: equil_b
-$$$
 +++
 
 molecule: equil_b
----
 reaction: equilibration
-direction: input
-reactant: equil_a
 template: equil_a() <> equil_b()
 $$$
 +++
-
-molecule: redox_enzyme
----
-reaction: redox
-reactant: donor acceptor reduced oxidized
-$$$
-+++
-
-molecule: donor
----
-reaction: redox
-reactant: redox_enzyme acceptor reduced oxidized
-$$$
-+++
-
-molecule: acceptor
----
-reaction: redox
-reactant: redox_enzyme donor reduced oxidized
-$$$
-+++
-
-molecule: reduced
----
-reaction: redox
-reactant: redox_enzyme donor acceptor oxidized
-$$$
-+++
-
-molecule: oxidized
----
-reaction: redox
-reactant: redox_enzyme donor acceptor reduced
-template: redox_enzyme(donor=None) + donor(redox_enzyme=None) | redox_enzyme(donor=1) % donor(redox_enzyme=1)
-template: redox_enzyme(donor=1) % donor(redox_enzyme=1) + acceptor() >> redox_enzyme(donor=None) + oxidized() + reduced()
-$$$
-+++
-
-molecule: convert_substrate
----
-reaction: conversion
-reactant: convert_product
-$$$
-+++
-
-molecule: convert_product
----
-reaction: conversion
-reactant: convert_substrate
-template: convert_substrate() >> convert_product
-$$$
-+++
-
-molecule: antioxidant
----
-reaction: squelch
-reactant: free_radical
-$$$
-+++
-
-molecule: free_radical
----
-reaction: squelch
-reactant: antioxidant
-template: antioxidant() + free_radical() >> None
-$$$
-+++
-
-molecule: factor
----
-reaction: conf_change_and_release
-reactant: conf_target modified released
-$$$
-reaction: conf_change
-reactant: conf_target modified
-$$$
-+++
-
-molecule: conf_target
----
-reaction: conf_change_and_release
-reactant: factor modified released
-$$$
-reaction: conf_change
-reactant: factor modified
-$$$
-reaction: conf_reversion
-reactant: modified
-$$$
-+++
-
-molecule: modified
----
-reaction: conf_change_and_release
-reactant: conf_target factor released
-$$$
-reaction: conf_change
-reactant: conf_target factor
-template: factor() + conf_target() >> modified()
-$$$
-reaction: conf_reversion
-reactant: conf_target
-template: modified() >> conf_target()
-$$$
-+++
-
-molecule: released
----
-reaction: conf_change_and_release
-reactant: conf_target factor modified
-template: factor() + conf_target(released=1) % released(conf_target=1) >> modified() + released(conf_target=None)
-$$$
-+++
-
-molecule: TF
----
-reaction: transX2
-reactant: trans_product
-$$$
-reaction: TF_binding
-reactant: gene
-$$$
-+++
-
-molecule: trans_product
----
-reaction: transX2
-reactant: TF
-template: TF() >> TF() + trans_product()
-$$$
-+++
-
-molecule: gene
----
-reaction: TF_binding
-reactant: TF
-template: TF(gene=None) + gene(TF=None) <> TF(gene=1) % gene(TF=1)
-$$$
-reaction: transcription
-reactant: gene_product
-$$$
-+++
-
-molecule: gene_product
-reaction: transcription
-reactant: gene
-template: gene() >> gene() + gene_product()
-$$$
-+++
-
-molecule: allo_cat
----
-reaction: allosteric_catalysis
-direction: output
-target: allo_pro
-$$$
-+++
-
-molecule: allo_eff
----
-reaction: allosteric_catalysis
-direction: output
-target: allo_pro
-$$$
-+++
-
-molecule: allo_sub
----
-reaction: allosteric_catalysis
-direction: output
-target: allo_pro
-$$$
-+++
-
-molecule: allo_pro
----
-reaction: allosteric_catalysis
-direction: input
-reactant: allo_cat
-reactant: allo_eff
-reactant: allo_sub
-template: allo_eff(allo_cat=1) % allo_cat(allo_eff=1, allo_sub=2) % allo_sub(allo_cat=2) >> allo_eff(allo_cat=1) % allo_cat(allo_eff=1, allo_sub=None) + allo_pro()
-$$$
-+++
-
-
 
 

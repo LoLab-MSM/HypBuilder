@@ -2,11 +2,11 @@
 model components
 
 # list of initial values
-A, 1, 2
+A, 1, 2, 5-6:0.5, 3:7-8
 # number of initial values for a given range (number:start-stop)
-B, 2:3-4
-range of initial values with a given increment (start-stop:increment)
-C, 5-6:1
+B, 1
+# range of initial values with a given increment (start-stop:increment)
+C, 1
 D, 1
 
 required reactions

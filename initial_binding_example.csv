@@ -4,15 +4,13 @@
 model components
 
 A, 10
-B, 1
-C, 10
-D, 10
-E, 5
+B, 10
+C, 50
+D, 100
+E, 100
 
 required reactions
 
-inhibition, D()[inhibitor], E()[inh_target], {f:5}
-inhibition, C()[inhibitor], D()[inh_target]
-inhibition, A()[inhibitor], C()[inh_target], {f:all}
-inhibition, B()[inhibitor], C()[inh_target]
-
+inhibition, A()[inhibitor], B()[inh_target], {f:5}
+inhibition, C()[inhibitor], E()[inh_target], {f:all}
+inhibition, D()[inhibitor], E()[inh_target], {f:all}

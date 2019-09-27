@@ -8,6 +8,8 @@ D, 1
 
 required reactions
 
-bind, A(site_B_on_A)[binder], B()[binder_target]
-bind, B()[binder], C(site_B_on_C)[binder_target]
-bind, C(site_D_on_C)[binder], D()[binder_target]
+bind, A()[binder], C(comp_site)[binder_target]
+bind, B()[binder], C(comp_site)[binder_target]
+bind, C()[binder], D(C_1)[binder_target]
+bind, C()[binder], D(C_2)[binder_target]
+pore_formation, C(s1:s2)[pore]
