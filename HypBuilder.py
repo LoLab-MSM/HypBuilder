@@ -77,6 +77,8 @@ class ModelAssembler:
         library_file = open(file_name)
         for line in library_file:
             if 'molecule:' in line:
+                self.base_model.library[molecule]['None'] = \
+                    Reaction(molecule, direction, reactants, reactants2, targets, templates)
                 molecule = line.split(':', 1)[1].strip()
             if 'reaction:' in line:
                 reaction = line.split(':', 1)[1].strip()
@@ -212,26 +214,17 @@ class ModelAssembler:
                             else:
                                 values.append(item)
 
-                        # find initial values
-                        # single I.V.
-                        if len(values) == 1 and ':' not in values[0]:
-                            self.base_model.nodes[node].initial = [values[0].strip()]
-                        # list of I.V.'s
-                        if len(values) > 1:
-                            values = [x.strip() for x in values]
-                            self.base_model.nodes[node].initial = values
-                        # range of I.V.'s
-                        if len(values) == 1 and ':' in values[0]:
-                            ranges = values[0].split('|')
-                            ranges = [x.strip() for x in ranges]
-                            self.base_model.nodes[node].initial = []
-
-                            for rangge in ranges:
-                                rangge = rangge.split(':')
+                        # list_of_ranges = []
+                        values = [x.strip() for x in values]
+                        for item in values:
+                            if ':' not in item:
+                                self.base_model.nodes[node].initial.append(item.strip())
+                            else:
+                                item = item.split(':')
                                 # based on desired number of I.V.'s
                                 # example: 3:4-6 -> ['4.0', '5.0', '6.0']
-                                if '-' in rangge[1]:
-                                    num, param_range = float(rangge[0]), rangge[1]
+                                if '-' in item[1]:
+                                    num, param_range = float(item[0]), item[1]
                                     param_range = param_range.split('-')
                                     start, stop = float(param_range[0]), float(param_range[1])
                                     self.base_model.nodes[node].initial.extend(
@@ -241,8 +234,8 @@ class ModelAssembler:
                                     self.base_model.nodes[node].initial.append(str(stop))
                                 # based on desired increment
                                 # example: 4-6:1 -> ['4.0', '5.0', '6.0']
-                                if '-' in rangge[0]:
-                                    param_range, inc = rangge[0], float(rangge[1])
+                                if '-' in item[0]:
+                                    param_range, inc = item[0], float(item[1])
                                     param_range = param_range.split('-')
                                     start, stop = float(param_range[0]), float(param_range[1])
                                     self.base_model.nodes[node].initial.extend(list(np.arange(start, stop, inc)))
@@ -251,7 +244,47 @@ class ModelAssembler:
                                     for j, every in enumerate(self.base_model.nodes[node].initial):
                                         self.base_model.nodes[node].initial[j] = str(every)
 
-                    if labels:
+                        # quit()
+                        # # find initial values
+                        # # single I.V.
+                        # if len(values) == 1 and ':' not in values[0]:
+                        #     self.base_model.nodes[node].initial = [values[0].strip()]
+                        # # list of I.V.'s
+                        # if len(values) > 1:
+                        #     values = [x.strip() for x in values]
+                        #     self.base_model.nodes[node].initial = values
+                        # # range of I.V.'s
+                        # if len(values) == 1 and ':' in values[0]:
+                        #     ranges = values[0].split('|')
+                        #     ranges = [x.strip() for x in ranges]
+                        #     self.base_model.nodes[node].initial = []
+                        #
+                        #     for rangge in ranges:
+                        #         rangge = rangge.split(':')
+                        #         # based on desired number of I.V.'s
+                        #         # example: 3:4-6 -> ['4.0', '5.0', '6.0']
+                        #         if '-' in rangge[1]:
+                        #             num, param_range = float(rangge[0]), rangge[1]
+                        #             param_range = param_range.split('-')
+                        #             start, stop = float(param_range[0]), float(param_range[1])
+                        #             self.base_model.nodes[node].initial.extend(
+                        #                 list(np.arange(start, stop, (stop - start) / (num-1))))
+                        #             for j, every in enumerate(self.base_model.nodes[node].initial):
+                        #                 self.base_model.nodes[node].initial[j] = str(every)
+                        #             self.base_model.nodes[node].initial.append(str(stop))
+                        #         # based on desired increment
+                        #         # example: 4-6:1 -> ['4.0', '5.0', '6.0']
+                        #         if '-' in rangge[0]:
+                        #             param_range, inc = rangge[0], float(rangge[1])
+                        #             param_range = param_range.split('-')
+                        #             start, stop = float(param_range[0]), float(param_range[1])
+                        #             self.base_model.nodes[node].initial.extend(list(np.arange(start, stop, inc)))
+                        #             if stop - self.base_model.nodes[node].initial[-1] == inc:
+                        #                 self.base_model.nodes[node].initial.append(stop)
+                        #             for j, every in enumerate(self.base_model.nodes[node].initial):
+                        #                 self.base_model.nodes[node].initial[j] = str(every)
+
+                    if labels:  # DON'T BELIEVE THIS IS USED ANY LONGER
                         for lab in each[1:]:
                             if lab.strip() not in self.base_model.library:
                                 print('%s not in library', lab)
@@ -308,6 +341,7 @@ class ModelAssembler:
                             [each[2].strip(), each[1].strip(), each[3].strip(), each[4].strip()])
 
                     if text:
+
                         self.base_model.text.append(''.join(each))
 
     def enumerate_models(self):
@@ -576,12 +610,106 @@ class ModelBuilder(Builder):
         self.build()
         self.export()
 
+    def text_rules(self, text):
+
+        new_text = []
+        new_monomers = []
+        for line in text:
+            if line[0:7] == 'Monomer':
+                new_monomers.append(line.split('\'')[1])
+            if line[0:4] != 'Rule':
+                new_text.append(line)
+
+
+            if line[0:4] == 'Rule':
+                sp = []
+                sp.append(line.split(',')[0])
+                sp.append(','.join(line.split(',')[1:-1]))
+                sp.append(line.split(',')[-1])
+                monos = []
+                for each in sp[1].split():
+                    if '(' in each:
+                        monos.append(each.split('(')[0])
+                for each in monos:
+                    if each not in new_monomers:
+                        ismon = False
+                        for item in self.model.monomers:
+                            if item.name == each:
+                                ismon = True
+
+                        if not ismon:
+                            self.monomer(each, [], {})
+
+                parens = []
+                for i, ch in enumerate(sp[1]):
+                    if ch == '(':
+                        parens.append([i])
+                    if ch == ')':
+                        parens[-1].append(i)
+
+                for i, each in enumerate(monos):
+
+                    sites = ''
+                    record = False
+                    for j, item in enumerate(sp[1]):
+                        if j == parens[i][1]:
+                            record = False
+                        if record:
+                            sites += item
+                        if j == parens[i][0]:
+                            record = True
+                    ss = sites.split()
+
+                    for j, item in enumerate(ss):
+                        if item[-1] == ',':
+                            ss[j] = ss[j][:-1]
+
+                    sss = deepcopy(ss)
+                    for j, item in enumerate(sss):
+                        sss[j] = sss[j].split('=')[0]
+
+                    ss_new = []
+                    for item in self.model.monomers:
+                        if item.name == each:
+                            for j, every in enumerate(sss):
+                                if every in item.sites:
+                                    ss_new.append(ss[j])
+
+                    ss_nj = ', '.join(ss_new)
+                    new_sp1 = ''
+                    copyover = True
+                    for j, item in enumerate(sp[1]):
+                        if j == parens[i][0]:
+                            new_sp1 += item
+                            copyover = False
+                        if copyover:
+                            new_sp1 += item
+
+                        if j == parens[i][1]:
+                            new_sp1 += ss_nj
+                            new_sp1 += item
+                            copyover = True
+                    sp[1] = new_sp1
+
+                sp = ','.join(sp)
+                new_text.append(sp)
+
+        return new_text
+
     def export(self):
 
+        self.current_model.text = self.text_rules(self.current_model.text)
         if not os.path.exists('output/' + self.current_model.name):
             os.makedirs('output/' + self.current_model.name)
         f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'w+')
         f.write(PysbFlatExporter(self.model).export())
+        f.write('\n')
+        # for line in self.current_model.text:
+        #     print line
+        # quit()
+        for line in self.current_model.text:
+            f.write(line)
+            f.write('\n')
         f.close()
 
     def build(self):
@@ -669,11 +797,14 @@ class ModelBuilder(Builder):
                             tags.append(every)
                 else:
                     param_values.append(item.strip())
-
+            # SEPTEMBER 22 2019 CHANGES
             # from reaction template substitute the corresponding molecules
             for mt in molecule_types:
+                # print
+                # print mt
+                # print reaction
                 if reaction in self.parsed_templates[mt] and self.parsed_templates[mt][reaction]:
-
+                    # print 'yes'
                     for t, temp in enumerate(self.parsed_templates[mt][reaction]):
                         reaction_name = each[0] + '_' + str(t)
                         for elem in each[1:]:
@@ -725,13 +856,13 @@ class ModelBuilder(Builder):
                         self.parsed_reactions.append(rxn)
                         self.reaction_types.append([])
 
-                        # todo: remove? reaction_types? don't believe this is used anymore
                         if types:
+                            typ = types.pop(0)
                             if '<>' in rxn or '|' in rxn:
-                                self.reaction_types[-1].append(types.pop(0))
-                                self.reaction_types[-1].append(types.pop(0))
+                                self.reaction_types[-1].append(typ + 'f')
+                                self.reaction_types[-1].append(typ + 'r')
                             else:
-                                self.reaction_types[-1].append(types.pop(0))
+                                self.reaction_types[-1].append(typ + 'f')
 
                         # add reaction rates
                         self.reaction_parameter_values.append([])
@@ -810,6 +941,9 @@ class ModelBuilder(Builder):
 
     def fill_remaining_sites(self):
 
+        # for i, rxn in enumerate(self.parsed_reactions):
+        #     print rxn
+        # quit()
         # fill out monomer binding sites
         for i, rxn in enumerate(self.parsed_reactions):
             dwdc = []
@@ -847,7 +981,8 @@ class ModelBuilder(Builder):
                             tags[item.split(':')[0]][-1] = [int(item.split(':')[1]), i]
                         else:
                             tags[item.split(':')[0]].append([int(item.split(':')[1]), i])
-
+        # print tags
+        # quit()
         for each in tags:
             tags[each].sort(key=lambda x: x[0])
 
@@ -881,11 +1016,25 @@ class ModelBuilder(Builder):
                                     self.parsed_reactions[tags[each][i][1]][j][1].append(thing[1])
                                     self.parsed_reactions[tags[each][i][1]][j][2].append('None')
 
+        # process reactions for competitive binding
+
+
+        # print
+        # for i, rxn in enumerate(self.parsed_reactions):
+        #     print rxn
+        # print
+        # quit()
         # enforce sequences of reactions
         for each in tags:
+            # print each, tags[each]
+            # quit()
             tags[each] = sorted(tags[each])
+            # print each, tags[each]
+            # quit()
             effects = []
             for item in tags[each]:
+                # print item
+                # quit()
                 record = False
                 changed = defaultdict(list)
                 for every in self.parsed_reactions[item[1]]:
@@ -896,7 +1045,7 @@ class ModelBuilder(Builder):
                             for i, stuff in enumerate(every[2]):
                                 if stuff != changed[every[0]][i]:
                                     changed[every[0]][i] = 'True'
-
+                # print self.parsed_reactions[item[1]]
                 for i, every in enumerate(self.parsed_reactions[item[1]]):
                     if isinstance(every, list):
                         for j, lotsa in enumerate(effects):
@@ -914,10 +1063,13 @@ class ModelBuilder(Builder):
                     if every == '<>' or every == '>>' or every == '|':
                         record = True
 
+
+
+        # quit()
     def add_rules(self):
-
+        # print
         for i, rxn in enumerate(self.parsed_reactions):
-
+            # print rxn
             # substitute in integers, None, ANY, and WILD
             for k, item in enumerate(rxn):
                 if item != '+' and item != '%' and item != '>>' and item != '<>' and item != '|':
@@ -1072,9 +1224,7 @@ class ModelBuilder(Builder):
     def random_binding(mols, pairs, binds):
 
         # This function randomly selects binding pairs until no more binding partners are available
-
         pair_num = [i for i in range(len(pairs))]
-
         while True:
             pairs_p = []
             for each in pairs:
@@ -1263,14 +1413,15 @@ class ModelBuilder(Builder):
                 app = True
                 for char in species:
                     if char == '(':
-                        obs_name += '__'
+                        obs_name += '_'
                     if app and char != '(' and char != ')' and char != '=' and char != ',' and char != ' ' and char != '%':
                         obs_name += char
                     if char == '=':
                         obs_name += '_'
                     if char == ',':
-                        obs_name += '__'
+                        obs_name += '_'
                     if char == '%':
-                        obs_name += '__BOUND__'
+                        obs_name += '__'
+                obs_name += '_obs'
 
                 self.observable(obs_name, each)
