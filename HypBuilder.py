@@ -12,6 +12,7 @@ from pysb.export.pysb_flat import PysbFlatExporter
 import os
 from pysb.bng import generate_network
 from pysb.bng import generate_equations
+import shutil
 
 
 class Node:
@@ -27,13 +28,15 @@ class Node:
 
 class Reaction:
 
-    def __init__(self, molecule, direction, reactants, reactants2, targets, templates):
+    def __init__(self, molecule, direction, reactants, reactants2, targets, templates, observables, expressions):
         self.molecule = molecule
         self.direction = direction
         self.reactants = reactants
         self.reactants2 = reactants2
         self.targets = targets
         self.templates = templates
+        self.observables = observables
+        self.expressions = expressions
         self.parsed_templates = []
 
 
@@ -42,13 +45,18 @@ class Model:
     def __init__(self):
         self.name = None
         self.library = defaultdict(dict)
+        self.text_library = defaultdict(list)
         self.nodes = {}
         self.data_nodes = []
+        self.paths = defaultdict(list)
         self.competing_sites = defaultdict(list)
         self.sequenced_reactions = defaultdict(list)
         self.required_reactions = []
         self.optional_reactions = []
-        self.text = []
+        self.module_reactions = []
+        self.text_top = []
+        self.text_bottom = []
+        self.text_obs = []
 
 
 class ModelAssembler:
@@ -73,12 +81,32 @@ class ModelAssembler:
         targets = []
         templates = []
         reactants2 = None
+        observables = []
+        expressions = []
+        text = []
+        text_read = False
+        SSS = False
+
 
         library_file = open(file_name)
         for line in library_file:
+            if text_read and '+++' in line:
+                text_read = False
+                self.base_model.text_library[text[0]] = text[1:]
+                text = []
+
+            if text_read:
+                text.append(line)
+
+            if 'text' in line:
+                text.append(line[6:-1])
+                text_read = True
+
             if 'molecule:' in line:
-                self.base_model.library[molecule]['None'] = \
-                    Reaction(molecule, direction, reactants, reactants2, targets, templates)
+                SSS = False
+                # todo: fix this nonsense
+                # self.base_model.library[molecule]['None'] = \
+                #     Reaction(molecule, direction, reactants, reactants2, targets, templates, observables, expressions)
                 molecule = line.split(':', 1)[1].strip()
             if 'reaction:' in line:
                 reaction = line.split(':', 1)[1].strip()
@@ -92,9 +120,19 @@ class ModelAssembler:
                 templates.append(line.split(':', 1)[1].strip())
             if 'reactants' in line:
                 reactants2 = line.split(':', 1)[1].strip().split()
-            if '$$$' in line:
+            if 'observable' in line:
+                observables.append(line.split(':', 1)[1].strip())
+            if 'expression' in line:
+                expressions.append(line.split(':', 1)[1].strip())
+            if '+++' in line and not SSS:
                 self.base_model.library[molecule][reaction] = \
-                    Reaction(molecule, direction, reactants, reactants2, targets, templates)
+                    Reaction(molecule, direction, reactants, reactants2, targets, templates, observables, expressions)
+
+            if '$$$' in line:
+                SSS = True
+                self.base_model.library[molecule][reaction] = \
+                    Reaction(molecule, direction, reactants, reactants2, targets, templates, observables, expressions)
+
 
                 reaction = None
                 direction = None
@@ -102,6 +140,8 @@ class ModelAssembler:
                 reactants2 = None
                 targets = []
                 templates = []
+                observables = []
+                expressions = []
 
     def import_labels(self, file_name):
 
@@ -110,9 +150,12 @@ class ModelAssembler:
         labels = False
         required = False
         optional = False
+        module = False
         competition = False
         fill_binding = False
-        text = False
+        text_top = False
+        text_bottom = False
+        text_obs = False
 
         with open(file_name) as label_file:
 
@@ -138,63 +181,120 @@ class ModelAssembler:
                         labels = False
                         required = False
                         optional = False
+                        module = False
                         competition = False
                         fill_binding = False
-                        text = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
                         continue
                     if each[0].strip() == 'labels':
                         components = False
                         labels = True
                         required = False
                         optional = False
+                        module = False
                         competition = False
                         fill_binding = False
-                        text = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
                         continue
                     if each[0].strip() == 'required reactions':
                         components = False
                         labels = False
                         required = True
                         optional = False
+                        module = False
                         competition = False
                         fill_binding = False
-                        text = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
                         continue
                     if each[0].strip() == 'optional reactions':
                         components = False
                         labels = False
                         required = False
                         optional = True
+                        module = False
                         competition = False
                         fill_binding = False
-                        text = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
+                        continue
+                    if each[0].strip() == 'module reactions':
+                        components = False
+                        labels = False
+                        required = False
+                        optional = False
+                        module = True
+                        competition = False
+                        fill_binding = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
                         continue
                     if each[0].strip() == 'competitive binding':
                         components = False
                         labels = False
                         required = False
                         optional = False
+                        module = False
                         competition = True
                         fill_binding = False
-                        text = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
                         continue
                     if each[0].strip() == 'fill binding':
                         components = False
                         labels = False
                         required = False
                         optional = False
+                        module = False
                         competition = False
                         fill_binding = True
-                        text = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
                         continue
-                    if each[0].strip() == 'text':
+                    if each[0].strip() == 'text top':
                         components = False
                         labels = False
                         required = False
                         optional = False
+                        module = False
                         competition = False
                         fill_binding = False
-                        text = True
+                        text_top = True
+                        text_bottom = False
+                        text_obs = False
+                        continue
+                    if each[0].strip() == 'text bottom':
+                        components = False
+                        labels = False
+                        required = False
+                        optional = False
+                        module = False
+                        competition = False
+                        fill_binding = False
+                        text_top = False
+                        text_bottom = True
+                        text_obs = False
+                        continue
+                    if each[0].strip() == 'text obs':
+                        components = False
+                        labels = False
+                        required = False
+                        optional = False
+                        module = False
+                        competition = False
+                        fill_binding = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = True
                         continue
 
                     if components:
@@ -211,6 +311,8 @@ class ModelAssembler:
                                 for every in item:
                                     if every.strip() == 'd':
                                         self.base_model.data_nodes.append(each[0].strip())
+                                    if every.strip().split(':')[0] == 'path':
+                                        self.base_model.paths[every.strip().split(':')[1]].append(each[0].strip())
                             else:
                                 values.append(item)
 
@@ -244,46 +346,6 @@ class ModelAssembler:
                                     for j, every in enumerate(self.base_model.nodes[node].initial):
                                         self.base_model.nodes[node].initial[j] = str(every)
 
-                        # quit()
-                        # # find initial values
-                        # # single I.V.
-                        # if len(values) == 1 and ':' not in values[0]:
-                        #     self.base_model.nodes[node].initial = [values[0].strip()]
-                        # # list of I.V.'s
-                        # if len(values) > 1:
-                        #     values = [x.strip() for x in values]
-                        #     self.base_model.nodes[node].initial = values
-                        # # range of I.V.'s
-                        # if len(values) == 1 and ':' in values[0]:
-                        #     ranges = values[0].split('|')
-                        #     ranges = [x.strip() for x in ranges]
-                        #     self.base_model.nodes[node].initial = []
-                        #
-                        #     for rangge in ranges:
-                        #         rangge = rangge.split(':')
-                        #         # based on desired number of I.V.'s
-                        #         # example: 3:4-6 -> ['4.0', '5.0', '6.0']
-                        #         if '-' in rangge[1]:
-                        #             num, param_range = float(rangge[0]), rangge[1]
-                        #             param_range = param_range.split('-')
-                        #             start, stop = float(param_range[0]), float(param_range[1])
-                        #             self.base_model.nodes[node].initial.extend(
-                        #                 list(np.arange(start, stop, (stop - start) / (num-1))))
-                        #             for j, every in enumerate(self.base_model.nodes[node].initial):
-                        #                 self.base_model.nodes[node].initial[j] = str(every)
-                        #             self.base_model.nodes[node].initial.append(str(stop))
-                        #         # based on desired increment
-                        #         # example: 4-6:1 -> ['4.0', '5.0', '6.0']
-                        #         if '-' in rangge[0]:
-                        #             param_range, inc = rangge[0], float(rangge[1])
-                        #             param_range = param_range.split('-')
-                        #             start, stop = float(param_range[0]), float(param_range[1])
-                        #             self.base_model.nodes[node].initial.extend(list(np.arange(start, stop, inc)))
-                        #             if stop - self.base_model.nodes[node].initial[-1] == inc:
-                        #                 self.base_model.nodes[node].initial.append(stop)
-                        #             for j, every in enumerate(self.base_model.nodes[node].initial):
-                        #                 self.base_model.nodes[node].initial[j] = str(every)
-
                     if labels:  # DON'T BELIEVE THIS IS USED ANY LONGER
                         for lab in each[1:]:
                             if lab.strip() not in self.base_model.library:
@@ -300,10 +362,10 @@ class ModelAssembler:
                                 item = item.split('(')
                                 item[1] = item[1].split('[')[1][:-1]
                                 if item[1] not in self.base_model.library:
-                                    print('%s not in library', item[1])
+                                    print('"' + item[1] + '" not in library')
                                     quit()
                                 if item[0] not in self.base_model.nodes:
-                                    print('%s not in molecule list', item[0])
+                                    print('"' + item[0] + '" not in molecule list')
                                     quit()
                                 # labels are probably not necessary at the moment
                                 # but could be relevant later
@@ -318,10 +380,28 @@ class ModelAssembler:
                                 item = item.split('(')
                                 item[1] = item[1].split('[')[1][:-1]
                                 if item[1] not in self.base_model.library:
-                                    print('%s not in library', item[1])
+                                    print('"' + item[1] + '" not in library')
                                     quit()
                                 if item[0] not in self.base_model.nodes:
-                                    print('%s not in molecule list', item[0])
+                                    print('"' + item[0] + '" not in molecule list')
+                                    quit()
+                                # labels are probably not necessary at the moment
+                                # but could be relevant later
+                                if item[1] not in self.base_model.nodes[item[0]].labels:
+                                    self.base_model.nodes[item[0]].labels.append(item[1])
+
+                    if module:
+                        each = [x.strip() for x in each]
+                        self.base_model.module_reactions.append(deepcopy(each))
+                        for item in each[1:]:
+                            if '(' in item and '{' not in item:
+                                item = item.split('(')
+                                item[1] = item[1].split('[')[1][:-1]
+                                if item[1] not in self.base_model.library:
+                                    print('"' + item[1] + '" not in library')
+                                    quit()
+                                if item[0] not in self.base_model.nodes:
+                                    print('"' + item[0] + '" not in molecule list')
                                     quit()
                                 # labels are probably not necessary at the moment
                                 # but could be relevant later
@@ -340,11 +420,125 @@ class ModelAssembler:
                         self.base_model.nodes[each[0].strip()].fill_binding.append(
                             [each[2].strip(), each[1].strip(), each[3].strip(), each[4].strip()])
 
-                    if text:
+                    if text_top:
+                        self.base_model.text_top.append(''.join(each))
 
-                        self.base_model.text.append(''.join(each))
+                    if text_bottom:
+                        self.base_model.text_bottom.append(''.join(each))
+
+                    if text_obs:
+                        self.base_model.text_obs.append(''.join(each))
 
     def enumerate_models(self):
+
+        modules = defaultdict(lambda: defaultdict(list))
+        noncomps = defaultdict(lambda: defaultdict(list))
+        for each in self.base_model.module_reactions:
+            for item in each:
+                if '{' in item:
+                    item = item[1:-1].split('|')
+                    for every in item:
+                        if every[:6] == 'module':
+                            subs = every.split(':', 1)[1].split(';')[0]
+                            noncomp = []
+                            if ';' in every:
+                                ne = []
+                                for thing in every.split(';')[1:]:
+                                    th = thing.split(':')
+                                    for sh in th[1:]:
+                                        ne.append(th[0] + ':' + sh)
+                                noncomp.extend(ne)
+
+                            for thing in subs.split(':')[1:]:
+                                noncomps[every.split(':')[1]][thing].extend(noncomp)
+                                modules[every.split(':')[1]][thing].append(each)
+
+        mod_index = []
+        for i, each in enumerate(modules):
+            for j, item in enumerate(modules[each]):
+                mod_index.append((i, each, j, item, modules[each][item]))
+
+        new_modules = defaultdict(lambda: defaultdict(list))
+        for each in mod_index:
+            new_modules[each[0]][each[2]] = each[4]
+
+        modules = new_modules
+
+        noncomps_list = []
+        for each in noncomps:
+            for item in noncomps[each]:
+                noncomps_list.append([[each, item]])
+                for every in noncomps[each][item]:
+                    noncomps_list[-1].append(every.split(':'))
+
+        for i, each in enumerate(noncomps_list):
+            for j, item in enumerate(each):
+                for every in mod_index:
+                    if item[0] == every[1] and item[1] == every[3]:
+                        noncomps_list[i][j][0] = every[0]
+                        noncomps_list[i][j][1] = every[2]
+
+        mod_nums = []
+        modules_list = []
+        for each in modules:
+            modules_list.append([])
+            mod_nums.append([])
+
+        for each in modules:
+            for item in modules[each]:
+                modules_list[int(each)-1].append([])
+                mod_nums[int(each)-1].append([])
+
+        for each in modules:
+            for item in modules[each]:
+                modules_list[int(each)-1][int(item)-1] = modules[each][item]
+                mod_nums[int(each)-1][int(item)-1] = [each, item]
+
+        modules_list = list(product(*modules_list))
+        mod_nums = list(product(*mod_nums))
+
+        for i, each in enumerate(modules_list):
+            modules_list[i] = list(each)
+
+        for i, each in enumerate(mod_nums):
+            mod_nums[i] = list(each)
+
+        mod_len = 1
+        for each in modules:
+            mod_len *= len(modules[each])
+        new_modules_list = []
+        for i, each in enumerate(mod_nums):
+            good = True
+            for item in noncomps_list:
+                if len(item) > 1:
+                    for every in item[1:]:
+                        if item[0] in each and every in each:
+                            good = False
+
+            if good:
+                new_modules_list.append([])
+                for item in modules_list[i]:
+                    for every in item:
+                        new_modules_list[-1].append(every)
+
+        modules_list = new_modules_list
+
+        # check for and remove "None" reactions
+        new_modules_list2 = []
+        for each in modules_list:
+            new_module = []
+            for item in each:
+                if item[0] != 'None':
+                    new_module.append(item)
+            new_modules_list2.append(new_module)
+        modules_list = new_modules_list2
+
+        new_modules_list3 = []
+        for each in modules_list:
+            if sorted(each) not in new_modules_list3:
+                new_modules_list3.append(sorted(each))
+
+        modules_list = new_modules_list3
 
         disjoint = defaultdict(list)
         for each in self.base_model.optional_reactions:
@@ -382,8 +576,6 @@ class ModelAssembler:
                     for every in item:
                         if every[:5] == 'group' and every not in op_re_gr:
                             op_re_gr[every] = []
-                        # if every[:8] == 'disjoint' and every not in op_re_gr:
-                        #     op_re_gr[every] = []
 
         for each in self.base_model.optional_reactions:
             for item in each:
@@ -406,6 +598,27 @@ class ModelAssembler:
 
         for j, reaction_set in enumerate(reaction_combinations):
             new_model = deepcopy(self.base_model)
+
+            compatible = True
+            incompatibles = defaultdict(list)
+            for each in reaction_set:
+                for item in each:
+                    if 'incomp' in item:
+                        item = item[1:-1].split('|')
+                        for every in item:
+                            if 'incomp' in every:
+                                every = every.split(':')
+                                if every[1] not in incompatibles:
+                                    incompatibles[every[1]] = []
+                                    incompatibles[every[1]].extend(every[2:])
+                                else:
+                                    if every[2:4] not in incompatibles[every[1]]:
+                                        incompatibles[every[1]].extend(every[2:])
+
+            for each in incompatibles:
+                for item in incompatibles[each]:
+                    if item in incompatibles:
+                        compatible = False
 
             # retain for now
             grouped = True
@@ -438,14 +651,15 @@ class ModelAssembler:
                         is_disjoint = True
                         break
 
-            if grouped and is_disjoint:
-
-                new_model.optional_reactions = reaction_set
-                self.models.append(deepcopy(new_model))
+            if grouped and is_disjoint and compatible:
+                for each in modules_list:
+                    new_model.module_reactions = each
+                    new_model.optional_reactions = reaction_set
+                    self.models.append(deepcopy(new_model))
 
     def remove_useless_models(self):
 
-        if self.base_model.data_nodes:
+        if self.base_model.data_nodes or self.base_model.paths:
 
             # models with interactions that cannot reach data nodes are eliminated
             models = []
@@ -454,6 +668,7 @@ class ModelAssembler:
                 # break down the reactions into sets of their component nodes
                 all_reactions = deepcopy(mod.required_reactions)
                 all_reactions.extend(deepcopy(mod.optional_reactions))
+                all_reactions.extend(deepcopy(mod.module_reactions))
                 node_lists = []
                 for reaction in all_reactions:
                     rxn_nodes = []
@@ -488,79 +703,34 @@ class ModelAssembler:
                 # check if each union of nodes contains at least one data node
                 # if so, then keep the model, otherwise eliminate
                 keep_model = True
-                for every in joined_sets:
-                    data_present = False
-                    for thing in self.base_model.data_nodes:
-                        if thing in every:
-                            data_present = True
+                if self.base_model.data_nodes:
+                    for every in joined_sets:
+                        data_present = False
+                        for thing in self.base_model.data_nodes:
+                            if thing in every:
+                                data_present = True
+                                break
+                        if not data_present:
+                            keep_model = False
                             break
-                    if not data_present:
-                        keep_model = False
-                        break
+
+                if self.base_model.paths:
+                    for every in joined_sets:
+                        path_present = True
+                        for thing in self.base_model.paths:
+                            nodes_present = True
+                            for lotsa in self.base_model.paths[thing]:
+                                if lotsa not in every:
+                                    nodes_present = False
+                            if not nodes_present:
+                                path_present = False
+                        if not path_present:
+                            keep_model = False
+
                 if keep_model:
                     models.append(mod)
 
             self.models = models
-
-        # # account for optional binding sequences
-        # new_models = []
-        # for each in self.models:
-        #
-        #     optionally_sequenced_reactions = []
-        #
-        #     for i, item in enumerate(each.required_reactions):
-        #         for j, every in enumerate(item):
-        #             if '{' in every and len(every.split(':')) > 2 and 'o' in every.split(':')[2]:
-        #                 optionally_sequenced_reactions.append(['r', i, item])
-        #
-        #     for i, item in enumerate(each.optional_reactions):
-        #         for j, every in enumerate(item):
-        #             if '{' in every and len(every.split(':')) > 2 and 'o' in every.split(':')[2]:
-        #                 optionally_sequenced_reactions.append(['o', i, item])
-        #
-        #     for i, item in enumerate(optionally_sequenced_reactions):
-        #         item2 = []
-        #         for j, every in enumerate(item[2]):
-        #             if '{' in every:
-        #                 split_tag = every.rsplit(':')[:-1]
-        #                 tag = ''
-        #                 for thing in split_tag:
-        #                     tag += thing + ':'
-        #                 tag = tag[:-1] + '}'
-        #                 item2.append(tag)
-        #             else:
-        #                 item2.append(every)
-        #         optionally_sequenced_reactions[i] = [item[0], item[1], item2]
-        #
-        #     for i, item in enumerate(optionally_sequenced_reactions):
-        #         optionally_sequenced_reactions[i] = [item, [item[0], item[1], [x for x in item[2] if '{' not in x]]]
-        #
-        #     osr_combos = list(product(*optionally_sequenced_reactions))
-        #     for item in osr_combos:
-        #         seq = []
-        #         for every in item:
-        #             for thing in every[2]:
-        #                 if '{' in thing:
-        #                     seq.append(int(thing.split(':')[1][:-1]))
-        #         list.sort(seq)
-        #         if len(seq) > 1 and len(seq) == seq[-1] - seq[0] + 1:
-        #             new_model = deepcopy(each)
-        #             for every in item:
-        #                 if every[0] == 'r':
-        #                     new_model.required_reactions[every[1]] = every[2]
-        #                 if every[0] == 'o':
-        #                     new_model.optional_reactions[every[1]] = every[2]
-        #             new_models.append(new_model)
-        #         if not seq:
-        #             new_model = deepcopy(each)
-        #             for every in item:
-        #                 if every[0] == 'r':
-        #                     new_model.required_reactions[every[1]] = every[2]
-        #                 if every[0] == 'o':
-        #                     new_model.optional_reactions[every[1]] = every[2]
-        #             new_models.append(new_model)
-        #
-        # self.models = new_models
 
     def enumerate_initial_value_combinations(self):
 
@@ -582,9 +752,12 @@ class ModelAssembler:
         self.models = deepcopy(models)
 
     def build_models(self):
+
         model_index = 0
+        if os.path.exists('output/' + self.models[0].name):
+            shutil.rmtree('output/' + self.models[0].name)
         for n, model in enumerate(self.models):
-            if len(model.optional_reactions) + len(model.required_reactions) > 0:
+            if len(model.optional_reactions) + len(model.required_reactions) + len(model.module_reactions) > 0:
                 ModelBuilder(model_index, model, self.obs)
                 model_index += 1
 
@@ -600,8 +773,13 @@ class ModelBuilder(Builder):
         self.current_model = model
         self.obs = obs
         self.parsed_templates = defaultdict(lambda: defaultdict(list))
+        self.parsed_obs_templates = defaultdict(lambda: defaultdict(list))
+        self.parsed_exp_templates = defaultdict(lambda: defaultdict(list))
         self.parsed_reactions = []
+        self.parsed_observables = []
+        self.parsed_expressions = []
         self.reaction_tags = []
+        self.reaction_rule_index = []
         self.reaction_types = []
         self.reaction_names = []
         self.fill_reactions = []
@@ -619,7 +797,6 @@ class ModelBuilder(Builder):
                 new_monomers.append(line.split('\'')[1])
             if line[0:4] != 'Rule':
                 new_text.append(line)
-
 
             if line[0:4] == 'Rule':
                 sp = []
@@ -698,31 +875,153 @@ class ModelBuilder(Builder):
 
     def export(self):
 
-        self.current_model.text = self.text_rules(self.current_model.text)
+        # write pre-text model
         if not os.path.exists('output/' + self.current_model.name):
             os.makedirs('output/' + self.current_model.name)
+
         f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'w+')
         f.write(PysbFlatExporter(self.model).export())
-        f.write('\n')
-        # for line in self.current_model.text:
-        #     print line
-        # quit()
-        for line in self.current_model.text:
+        f.close()
+
+        # add top text
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'r')
+        contents = f.readlines()
+        f.close()
+
+        self.current_model.text_top = self.text_rules(self.current_model.text_top)
+
+        for i, each in enumerate(contents):
+            if each.strip() == 'Model()':
+                contents.insert(i, '\n')
+                for j, line in enumerate(self.current_model.text_top):
+                    contents.insert(i+j, line + '\n')
+                break
+
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'w')
+        for each in contents:
+            f.write(each)
+        f.close()
+
+        # add bottom text
+        self.current_model.text_bottom = self.text_rules(self.current_model.text_bottom)
+
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'a+')
+        for line in self.current_model.text_bottom:
             f.write(line)
             f.write('\n')
         f.close()
+
+        # add obs text
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'r')
+        contents = f.readlines()
+        f.close()
+
+        obs_ind = 0
+        for i, each in enumerate(contents):
+            if "Observable" in each:
+                obs_ind = i
+        for i, each in enumerate(self.current_model.text_obs):
+            contents.insert(i + obs_ind + 1, each + '\n')
+
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'w')
+        for each in contents:
+            f.write(each)
+        f.close()
+
+        # rule specific text
+        params_to_remove = []
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'r')
+        contents = f.readlines()
+        f.close()
+
+        expression_tags = []
+        ex_tags_count = 0
+        for each in self.reaction_tags:
+            expression_tags.append([])
+            for item in each:
+                if item.split(':')[0] == 'expression':
+                    expression_tags[-1].append(item)
+                    ex_tags_count += 1
+
+        while ex_tags_count > 0:
+            rule_index = 0
+            for i, each in enumerate(contents):
+                if each[:4] == 'Rule':
+                    expressions = []
+                    rule_name = each.split("'")[1].strip()
+                    rule_ind = 0
+                    if expression_tags[rule_index]:
+                        params = expression_tags[rule_index][0].split(':')[1].split('(')[1][:-1].split(';')
+                        param_index = 0
+                        param_names = []
+
+                        # TODO: NEEDS PROPER PARSING
+                        # TODO: NEEDS TO ALLOW FOR MULTIPLE EXPRESSIONS
+                        for j, every in enumerate(self.current_model.text_library[expression_tags[rule_index][0].split(':')[1].split('(')[0].strip()]):
+                            rule_ind = j
+                            if every[:9] == 'Parameter':
+                                param_names.append([every.split("'")[1], rule_name + '_' + every.split("'")[1].split('_')[1]])
+                                every2 = 'Parameter(\'' + rule_name + '_' + every.split("'")[1].split('_')[1] + '\', ' + params[param_index] + ')\n'
+                                param_index += 1
+                                contents.insert(i+j, every2)
+                            elif every[:10] == 'Expression':
+                                for thing in param_names:
+                                    if thing[0] in every:
+                                        every = every.replace(thing[0], thing[1])
+                                obs = []
+                                for thing in params:
+                                    if thing[-3:] == 'obs':
+                                        obs.append(thing)
+                                for k, thing in enumerate(obs):
+                                    every = every.replace('obs_' + str(k), thing)
+                                every = every.split("'")[0] + '\'' + rule_name + '_ex\'' + every.split("'")[2]
+                                contents.insert(i+j, every)
+                                expressions.append(every.split("'")[1])
+                            else:
+                                contents.insert(i+j, every)
+
+                        # rename parameter for expression
+                        if expressions:
+                            rule_split = each.split(',')
+                            for j, item in enumerate(expressions):
+                                params_to_remove.append(
+                                    rule_split[len(each.split(',')) - len(expressions) + j].split(')')[0].strip())
+                                rule_split[len(each.split(',')) - len(expressions) + j] = ' ' + item
+                            contents[i + rule_ind + 1] = ','.join(rule_split) + ')\n\n'
+
+                        expression_tags[rule_index] = []
+                        ex_tags_count -= 1
+                        break
+                    rule_index += 1
+
+        # remove uneeded parameters
+        new_contents = []
+        for each in contents:
+            retain = True
+            for item in params_to_remove:
+                if item in each:
+                    retain = False
+            if retain:
+                new_contents.append(each)
+
+        f.close()
+
+        f = open('output/' + self.current_model.name + '/model_' + str(self.num) + '.py', 'w')
+        for each in new_contents:
+            f.write(each)
+        f.close()
+
 
     def build(self):
 
         self.parse_templates()
         self.process_reactions()
-        # self.process_competitive_binding()
         self.collect_monomer_info()
         self.add_monomers()
         self.fill_remaining_sites()
+        self.add_observables()
         self.add_rules()
         self.add_initials()
-        self.add_observables()
 
     @staticmethod
     def is_float(string):
@@ -734,7 +1033,7 @@ class ModelBuilder(Builder):
 
     def parse_templates(self):
 
-        # parse the reaction templates
+        # parse the reaction templates observables and expressions
         for molecule in self.current_model.library:
             for reaction in self.current_model.library[molecule]:
                 self.parsed_templates[molecule][reaction] = []
@@ -769,6 +1068,7 @@ class ModelBuilder(Builder):
         # collect required and optional reactions
         reactions_to_process = deepcopy(self.current_model.required_reactions)
         reactions_to_process.extend(deepcopy(self.current_model.optional_reactions))
+        reactions_to_process.extend(deepcopy(self.current_model.module_reactions))
 
         for each in reactions_to_process:
 
@@ -776,18 +1076,34 @@ class ModelBuilder(Builder):
             reaction = each[0]
             molecules = []
             site_labels = []
+            site_values = []
             molecule_types = []
             tags = []
             types = []
             param_values = []
+
             for item in each[1:]:
                 if ']' in item and '}' not in item:
                     molecules.append(item.split('[')[0].split('(')[0])
                     molecule_types.append(item.split('[')[1][:-1])
                     if item.split('(')[1].split(')')[0]:
-                        site_labels.append(item.split('(')[1].split(')')[0].split(':'))
+                        labels = item.split('(')[1].split(')')[0].split(':')
+                        no_eq_val = False
+                        eq_val = False
+                        for every in labels:
+                            if '=' not in every:
+                                no_eq_val = True
+                                site_labels.append([every])
+                            if '=' in every:
+                                eq_val = True
+                                site_values.append([every.split('=')])
+                        if not no_eq_val:
+                            site_labels.append([])
+                        if not eq_val:
+                            site_values.append([])
                     else:
                         site_labels.append([])
+                        site_values.append([])
                 elif '}' in item:
                     tgs = item.strip()[1:-1].split('|')
                     for every in tgs:
@@ -797,14 +1113,20 @@ class ModelBuilder(Builder):
                             tags.append(every)
                 else:
                     param_values.append(item.strip())
-            # SEPTEMBER 22 2019 CHANGES
+
+            # print
+            # print molecules
+            # print site_labels
+            # print site_values
+            # print molecule_types
+            # print tags
+            # print types
+            # print param_values
+            # print
+
             # from reaction template substitute the corresponding molecules
             for mt in molecule_types:
-                # print
-                # print mt
-                # print reaction
                 if reaction in self.parsed_templates[mt] and self.parsed_templates[mt][reaction]:
-                    # print 'yes'
                     for t, temp in enumerate(self.parsed_templates[mt][reaction]):
                         reaction_name = each[0] + '_' + str(t)
                         for elem in each[1:]:
@@ -814,6 +1136,9 @@ class ModelBuilder(Builder):
                                     reaction_name += '_' + elem.split('[')[0].split('(')[0] + '_' + elem.split('[')[1][:-1]
                                 else:
                                     site_str = elem.split('[')[0].split('(')[1].split(')')[0].split(':')
+                                    for s, site in enumerate(site_str):
+                                        if '=' in site:
+                                            site_str[s] = '_'.join(site.split('='))
                                     site_str = '_'.join(site_str)
                                     reaction_name += '_' + elem.split('[')[0].split('(')[0] + '_' + elem.split('[')[1][:-1] + '_' + site_str
 
@@ -821,7 +1146,7 @@ class ModelBuilder(Builder):
                         rxn = deepcopy(temp)
 
                         for i, elem in enumerate(rxn):
-                            if isinstance(elem, list):
+                            if isinstance(elem, list) and elem[0] != 'None':
                                 mol_ind = None
 
                                 for j, mol_typ in enumerate(molecule_types):
@@ -838,19 +1163,9 @@ class ModelBuilder(Builder):
                                             if '_' in every and every.split('_')[0] == mol_typ \
                                                     and every.split('_')[1].isdigit():
                                                 rxn[i][1][j] = molecules[k] + '_' + every.split('_')[1]
-
-
-                        # for i, elem in enumerate(rxn):
-                        #     if isinstance(elem, list):
-                        #         for j, mol_typ in enumerate(molecule_types):
-                        #             if elem[0] == mol_typ:
-                        #                 rxn[i][0] = molecules[j]
-                        #             for k, every in enumerate(elem[1]):
-                        #                 if every == mol_typ:
-                        #                     rxn[i][1][k] = molecules[j]
-                        #                 if '_' in every and every.split('_')[0] == mol_typ \
-                        #                         and every.split('_')[1].isdigit():
-                        #                     rxn[i][1][k] = molecules[j] + '_' + every.split('_')[1]
+                                if site_values[mol_ind]:
+                                    rxn[i][1].append(site_values[mol_ind][0][0])
+                                    rxn[i][2].append(site_values[mol_ind][0][1])
 
                         self.reaction_tags.append(tags)
                         self.parsed_reactions.append(rxn)
@@ -878,60 +1193,20 @@ class ModelBuilder(Builder):
                             else:
                                 self.reaction_parameter_values[-1].extend(['vary'])
 
-    # def process_competitive_binding(self):
-    #
-    #     # todo: add support to accomplish this at the level of the library
-    #
-    #     # process competing sites
-    #     competing_sites = defaultdict(list)
-    #     for each in self.current_model.competing_sites:
-    #
-    #         # check for consistent competitive binding target
-    #         target = self.current_model.competing_sites[each][0][1]
-    #         for item in self.current_model.competing_sites[each]:
-    #             if item[1] != target:
-    #                 print 'targets for competitive binding do not match'
-    #                 quit()
-    #
-    #         competing_sites[target] = []
-    #         composite = ''
-    #         for item in self.current_model.competing_sites[each]:
-    #             competing_sites[target].append(item[0])
-    #             composite += item[0] + '_'
-    #         composite = composite[:-1]
-    #         competing_sites[target].append(composite)
-    #
-    #     # combine competitive binding sites
-    #     for each in competing_sites:
-    #         for i, rxn in enumerate(self.parsed_reactions):
-    #             for j, elem in enumerate(rxn):
-    #                 if isinstance(elem, list) and elem[0] == each:
-    #                     for k, site in enumerate(elem[1]):
-    #                         for l, item in enumerate(competing_sites[each][:-1]):
-    #                             if site == item:
-    #                                 self.parsed_reactions[i][j][1][k] = competing_sites[each][-1]
-    #                             if '_' in site and site.split('_')[0] == item and site.split('_')[1].isdigit():
-    #                                 self.parsed_reactions[i][j][1][k] \
-    #                                     = competing_sites[each][-1] + '_' + site.split('_')[1]
+            self.reaction_rule_index.append(len(self.parsed_reactions))
 
     def collect_monomer_info(self):
 
-        # initiate monomer info
-        # for each in self.current_model.nodes:
-        #     self.monomer_info[each] = []
-
         # fill monomer info
-        monomers_list = []
         for each in self.parsed_reactions:
             for item in each:
                 if isinstance(item, list):
-                    # if item[0] not in monomers_list:
-                    #     monomers_list.append(item[0])
-                    if item[0] not in self.monomer_info:
-                        self.monomer_info[item[0]] = []
-                    for every in item[1]:
-                        if every not in self.monomer_info[item[0]]:
-                            self.monomer_info[item[0]].append(every)
+                    if item[0] != 'None':
+                        if item[0] not in self.monomer_info:
+                            self.monomer_info[item[0]] = []
+                        for every in item[1]:
+                            if every not in self.monomer_info[item[0]]:
+                                self.monomer_info[item[0]].append(every)
 
     def add_monomers(self):
 
@@ -941,9 +1216,6 @@ class ModelBuilder(Builder):
 
     def fill_remaining_sites(self):
 
-        # for i, rxn in enumerate(self.parsed_reactions):
-        #     print rxn
-        # quit()
         # fill out monomer binding sites
         for i, rxn in enumerate(self.parsed_reactions):
             dwdc = []
@@ -959,15 +1231,15 @@ class ModelBuilder(Builder):
 
             for j, elem in enumerate(rxn):
                 if isinstance(elem, list):
-
-                    for site in self.monomer_info[elem[0]]:
-                        add_site = True
-                        for every in dwdc:
-                            if elem[0] == every[0] and site in every[1]:
-                                add_site = False
-                        if add_site and site not in self.parsed_reactions[i][j][1]:
-                            self.parsed_reactions[i][j][1].append(site)
-                            self.parsed_reactions[i][j][2].append('None')
+                    if elem[0] != 'None':
+                        for site in self.monomer_info[elem[0]]:
+                            add_site = True
+                            for every in dwdc:
+                                if elem[0] == every[0] and site in every[1]:
+                                    add_site = False
+                            if add_site and site not in self.parsed_reactions[i][j][1]:
+                                self.parsed_reactions[i][j][1].append(site)
+                                self.parsed_reactions[i][j][2].append('None')
 
         # process tags for reaction sequence information
         tags = {}
@@ -981,8 +1253,7 @@ class ModelBuilder(Builder):
                             tags[item.split(':')[0]][-1] = [int(item.split(':')[1]), i]
                         else:
                             tags[item.split(':')[0]].append([int(item.split(':')[1]), i])
-        # print tags
-        # quit()
+
         for each in tags:
             tags[each].sort(key=lambda x: x[0])
 
@@ -1016,25 +1287,11 @@ class ModelBuilder(Builder):
                                     self.parsed_reactions[tags[each][i][1]][j][1].append(thing[1])
                                     self.parsed_reactions[tags[each][i][1]][j][2].append('None')
 
-        # process reactions for competitive binding
-
-
-        # print
-        # for i, rxn in enumerate(self.parsed_reactions):
-        #     print rxn
-        # print
-        # quit()
         # enforce sequences of reactions
         for each in tags:
-            # print each, tags[each]
-            # quit()
             tags[each] = sorted(tags[each])
-            # print each, tags[each]
-            # quit()
             effects = []
             for item in tags[each]:
-                # print item
-                # quit()
                 record = False
                 changed = defaultdict(list)
                 for every in self.parsed_reactions[item[1]]:
@@ -1045,7 +1302,7 @@ class ModelBuilder(Builder):
                             for i, stuff in enumerate(every[2]):
                                 if stuff != changed[every[0]][i]:
                                     changed[every[0]][i] = 'True'
-                # print self.parsed_reactions[item[1]]
+
                 for i, every in enumerate(self.parsed_reactions[item[1]]):
                     if isinstance(every, list):
                         for j, lotsa in enumerate(effects):
@@ -1063,13 +1320,9 @@ class ModelBuilder(Builder):
                     if every == '<>' or every == '>>' or every == '|':
                         record = True
 
-
-
-        # quit()
     def add_rules(self):
-        # print
         for i, rxn in enumerate(self.parsed_reactions):
-            # print rxn
+
             # substitute in integers, None, ANY, and WILD
             for k, item in enumerate(rxn):
                 if item != '+' and item != '%' and item != '>>' and item != '<>' and item != '|':
@@ -1378,9 +1631,7 @@ class ModelBuilder(Builder):
                          self.model.parameters[init_name])
 
         # initialize monomers
-        # for each in self.current_model.nodes:
         for each in self.monomer_info:
-
             init_name = each + '_0'
             mon_obj = self.model.monomers[each]
             states = {}
