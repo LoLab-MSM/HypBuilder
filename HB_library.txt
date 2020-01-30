@@ -1,4 +1,13 @@
 
+
+molecule: hd_ex_subunit
+reaction: homodimer_ex
+observable: hd_ex_subunit
+expression: hd_ex_subunit * multiplier
+template: hd_ex_subunit(hd_ex_subunit=None) + hd_ex_subunit(hd_ex_subunit=None) <> hd_ex_subunit(hd_ex_subunit=1) % hd_ex_subunit(hd_ex_subunit=1)
+$$$
++++
+
 molecule: pore
 reaction: pore_formation
 template: pore(pore_1=None, pore_2=None) + pore(pore_1=None, pore_2=None) <> pore(pore_1=None, pore_2=1) % pore(pore_1=1, pore_2=None)
@@ -46,6 +55,7 @@ molecule: binder
 molecule: bound
 +++
 
+
 molecule: binder_target
 reaction: bind
 template: binder(binder_target=None) + binder_target(binder=None) <> binder(binder_target=1) % binder_target(binder=1)
@@ -59,7 +69,12 @@ $$$
 reaction: bind2
 template: bound(binder=1) % binder(bound=1, binder_target=None) + binder_target(binder=None) <> bound(binder=1) % binder(bound=1, binder_target=2) % binder_target(binder=2)
 $$$
+reaction: bind_activate
+template: binder(bound=None) + binder_target() <> binder(bound=1) % bound(binder=1)
+$$$
 +++
+
+
 
 molecule: inhibitor
 +++
@@ -121,12 +136,22 @@ molecule: self_catalyzer
 +++
 
 molecule: catalyzer
+reaction: synthesis
+template: None >> catalyzer()
+$$$
 +++
 
 molecule: substrate
 reaction: substrate_binding
 template: catalyzer(substrate=None) + substrate(catalyzer=None) <> catalyzer(substrate=1) % substrate(catalyzer=1)
 $$$
++++
+
+
+molecule: bound_1
++++
+
+molecule: bound_2
 +++
 
 molecule: product
@@ -140,6 +165,17 @@ reaction: catalysis
 template: catalyzer(substrate=None) + substrate(catalyzer=None) <> catalyzer(substrate=1) % substrate(catalyzer=1)
 template: catalyzer(substrate=1) % substrate(catalyzer=1) >> catalyzer(substrate=None) + product()
 $$$
+reaction: bind_catalyze
+template: bound(catalyzer=None) + catalyzer(bound=None) <> bound(catalyzer=1) % catalyzer(bound=1)
+template: bound(catalyzer=1) % catalyzer(bound=1, substrate=None) + substrate(catalyzer=None) <> bound(catalyzer=1) % catalyzer(bound=1, substrate=2) % substrate(catalyzer=2)
+template: bound(catalyzer=1) % catalyzer(bound=1, substrate=2) % substrate(catalyzer=2) >> bound(catalyzer=1) % catalyzer(bound=1, substrate=None) + product()
+$$$
+reaction: bind_2_catalyze
+template: bound_1(bound_2=None) + bound_2(bound_1=None) <> bound_1(bound_2=1) % bound_2(bound_1=1)
+template: bound_1(bound_2=1) % bound_2(bound_1=1, catalyzer=None) + catalyzer(bound_2=None) <> bound_1(bound_2=1) % bound_2(bound_1=1, catalyzer=2) % catalyzer(bound_2=2)
+template: bound_1(bound_2=1) % bound_2(bound_1=1, catalyzer=2) % catalyzer(bound_2=2, substrate=None) + substrate(catalyzer=None) <> bound_1(bound_2=1) % bound_2(bound_1=1, catalyzer=2) % catalyzer(bound_2=2, substrate=3) % substrate(catalyzer=3)
+template: bound_1(bound_2=1) % bound_2(bound_1=1, catalyzer=2) % catalyzer(bound_2=2, substrate=3) % substrate(catalyzer=3) >> bound_1(bound_2=1) % bound_2(bound_1=1, catalyzer=2) % catalyzer(bound_2=2, substrate=None) + product()
+$$$
 +++
 
 molecule: equil_a
@@ -149,6 +185,58 @@ molecule: equil_b
 reaction: equilibration
 template: equil_a() <> equil_b()
 $$$
++++
+
+molecule: protein
+reaction: synthesis
+template: None >> protein()
+$$$
++++
+
+molecule: cell
+reaction: division
+template: cell() >> cell() + cell()
+$$$
+reaction: die
+template: cell() >> None
+$$$
++++
+
+molecule: diff_cell
+reaction: diff
+template: cell() <> diff_cell()
+$$$
+reaction: diff_uni
+template: cell() >> diff_cell()
+$$$
++++
+
+
+text: timer
+Monomer('Timer')
+Parameter('Timer_rate_0', )
+Parameter('Timer_0', )
+Observable('Timer_obs', Timer())
+Rule('Timer_increment', None >> Timer(), Timer_rate_0)
+Initial(Timer(), Timer_0)
++++
+
+text: logistic_curve
+
+from sympy import Piecewise
+Parameter('a_0', )
+Parameter('b_0', )
+Parameter('c_0', )
+Parameter('d_0', )
+Expression('bid_rate', Piecewise(((d_0*b_0*c_0*((Timer_obs/a_0)**b_0)*(((Timer_obs/a_0)**b_0) + 1)**(-(c_0+1)))/Timer_obs, Timer_obs > 0.0), (0.0, True)))
++++
+
+text: k_fate
+
+Parameter('param_0', )
+Parameter('param_1', )
+Parameter('param_2', )
+Expression('name', (param_0*param_2 + param_1*obs_0) / (param_2 + obs_0))
 +++
 
 
