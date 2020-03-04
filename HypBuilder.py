@@ -174,8 +174,11 @@ class ModelAssembler:
 
             for i, each in enumerate(label_list):
                 if each:
+                    # print each
                     if each[0][0] == '#':
                         continue
+                    if each[0][0] == '$':
+                        break
                     if each[0].strip() == 'model components':
                         components = True
                         labels = False
