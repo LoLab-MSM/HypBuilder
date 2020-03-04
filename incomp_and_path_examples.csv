@@ -1,0 +1,30 @@
+model components
+
+A, 1, {path:1}
+B, 1
+C, 1
+D, 1
+E, 1
+F, 1
+G, 1
+H, 1
+I, 1, {path:1}
+
+
+required reactions
+
+
+optional reactions
+
+catalysis, A()[catalyzer], H()[substrate], I()[product], {incomp:1}
+bind_catalyze, A()[bound], B(cat)[catalyzer], H(cat)[substrate], I()[product], {incomp:2:1}
+bind_2_catalyze, A()[bound_1], B()[bound_2], C()[catalyzer], H(cat)[substrate], I()[product], {incomp:3:1:2}
+catalysis, A()[catalyzer], D()[substrate], E()[product], {incomp:4:1:2:3}
+catalysis, E()[catalyzer], H()[substrate], I()[product], {incomp:5:1:2:3}
+bind_catalyze, A()[bound], B()[catalyzer], D()[substrate], E()[product], {incomp:6:1:2:3:4}
+bind_2_catalyze, A()[bound_1], B()[bound_2], C()[catalyzer], D()[substrate], E()[product], {incomp:7:1:2:3:4:6}
+catalysis, A()[catalyzer], F()[substrate], G()[product], {incomp:8:1:2:3:4:5:6:7}
+catalysis, G()[catalyzer], H()[substrate], I()[product], {incomp:9:1:2:3:5}
+bind_catalyze, A()[bound], B()[catalyzer], F()[substrate], G()[product], {incomp:10:1:2:3:4:5:6:7:8}
+bind_2_catalyze, A()[bound_1], B()[bound_2], C()[catalyzer], F()[substrate], G()[product], {incomp:11:1:2:3:4:5:6:7:8:10}
+catalysis, E()[catalyzer], F()[substrate], G()[product], {incomp:12:1:2:3:5:8:10:11}
