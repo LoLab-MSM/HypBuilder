@@ -12,3 +12,6 @@ from HypBuilder import ModelAssembler
 # ModelAssembler('HB_library.txt', 'initial_values_example.csv')
 # ModelAssembler('HB_library.txt', 'dwdc_example.csv')
 # ModelAssembler('HB_library.txt', 'binding_sites_example.csv')
+# ModelAssembler('HB_library.txt', 'expression_and_text_examples.csv')
+# ModelAssembler('HB_library.txt', 'modules_example.csv')
+# ModelAssembler('HB_library.txt', 'incomp_and_path_examples.csv')
