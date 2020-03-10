@@ -1,6 +1,7 @@
 # exported from PySB model 'model'
 
-from pysb import Model, Monomer, Parameter, Expression, Compartment, Rule, Observable, Initial, MatchOnce, Annotation, ANY, WILD
+from pysb import Model, Monomer, Parameter, Expression, Compartment, Rule, Observable, Initial, MatchOnce, Annotation, MultiState, Tag, ANY, WILD
+
 
 Model()
 
@@ -19,5 +20,4 @@ Rule('inhibition_0_D_inhibitor_E_inh_target', D(E=None) + E(D=None) | D(E=1) % E
 
 Initial(E(D=None), E_0)
 Initial(D(E=None), D_0)
-
 

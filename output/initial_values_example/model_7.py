@@ -1,6 +1,7 @@
 # exported from PySB model 'model'
 
-from pysb import Model, Monomer, Parameter, Expression, Compartment, Rule, Observable, Initial, MatchOnce, Annotation, ANY, WILD
+from pysb import Model, Monomer, Parameter, Expression, Compartment, Rule, Observable, Initial, MatchOnce, Annotation, MultiState, Tag, ANY, WILD
+
 
 Model()
 
@@ -33,5 +34,4 @@ Initial(A(B=None), A_0)
 Initial(C(B=None, D=None), C_0)
 Initial(B(A=None, C=None), B_0)
 Initial(D(C=None), D_0)
-
 

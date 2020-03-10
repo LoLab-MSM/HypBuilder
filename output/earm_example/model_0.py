@@ -1,6 +1,7 @@
 # exported from PySB model 'model'
 
-from pysb import Model, Monomer, Parameter, Expression, Compartment, Rule, Observable, Initial, MatchOnce, Annotation, ANY, WILD
+from pysb import Model, Monomer, Parameter, Expression, Compartment, Rule, Observable, Initial, MatchOnce, Annotation, MultiState, Tag, ANY, WILD
+
 
 Model()
 
@@ -332,5 +333,4 @@ Initial(BakM(BidM=None, BakA=None), BakM_0)
 Initial(C6A(C8pro=None), C6A_0)
 Initial(BclxLC(), BclxLC_0)
 Initial(CytoCM(BaxA=None, BakA=None), CytoCM_0)
-
 
