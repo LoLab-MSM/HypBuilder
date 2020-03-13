@@ -2,15 +2,20 @@
 model components
 
 # list of initial values
-A, 1, 2, 5-6:0.5, 3:7-8
+A, 1, 2
 # number of initial values for a given range (number:start-stop)
-B, 1
+B, 3:7-8
 # range of initial values with a given increment (start-stop:increment)
-C, 1
-D, 1
+C, 5-6:0.5
+# initial value priorities for species. Only the first monomer in the order will have non-zero IV (priority sequence:order)
+D, 60, {priority:1:1}
+E, 70, {priority:1:2}
 
+F, 1
 required reactions
 
 bind, A()[binder], B()[binder_target]
 bind, B()[binder], C()[binder_target]
 bind, C()[binder], D()[binder_target]
+bind, D()[binder], F()[binder_target]
+bind, E()[binder], F()[binder_target]
