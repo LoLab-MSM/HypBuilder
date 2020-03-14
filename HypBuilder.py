@@ -1505,37 +1505,21 @@ class ModelBuilder(Builder):
         priorities = defaultdict(list)
 
         for each in self.monomer_info:
-            print each, self.current_model.iv_priorities[each]
             if self.current_model.iv_priorities[each]:
                 for item in self.current_model.iv_priorities[each]:
-                    # print item
                     priorities[item[0]].append([item[1], each])
-        print
+
         for each in priorities:
-            print each, priorities[each]
             priorities[each] = sorted(priorities[each])
-            print each, priorities[each]
-            # value = self.current_model.nodes[priorities[each][0][1]].initial[0]
-            # print value
             value_used = False
             for item in priorities:
                 for every in priorities[item]:
-                    print every
                     if every[1] in self.monomer_info and not value_used:
                         self.current_model.nodes[every[1]].initial[0] = self.current_model.nodes[every[1]].initial[0]
                         value_used = True
                     else:
                         self.current_model.nodes[every[1]].initial[0] = 0
 
-
-
-
-
-
-
-        print '----------------'
-        # quit()
-        # converts iv strings to floats
         for each in self.current_model.nodes:
             self.current_model.nodes[each].initial[0] = float(self.current_model.nodes[each].initial[0])
 
