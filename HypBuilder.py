@@ -13,6 +13,8 @@ import os
 from pysb.bng import generate_network
 from pysb.bng import generate_equations
 import shutil
+import importlib.machinery, importlib.util
+from pyvipr.pysb_viz.static_viz import PysbStaticViz
 
 
 class Node:
@@ -55,6 +57,8 @@ class Model:
         self.required_reactions = []
         self.optional_reactions = []
         self.module_reactions = []
+        self.listed_reactions = []
+        self.lists = []
         self.text_top = []
         self.text_bottom = []
         self.text_obs = []
@@ -62,11 +66,12 @@ class Model:
 
 class ModelAssembler:
 
-    def __init__(self, library, model_description, obs='monomers'):
+    def __init__(self, library, model_description, obs='monomers', network_figs=False):
         self.base_model = Model()
         self.import_library(library)
         self.import_labels(model_description)
         self.obs = obs
+        self.network_figs = network_figs
         self.models = []
         self.enumerate_models()
         self.remove_useless_models()
@@ -134,7 +139,6 @@ class ModelAssembler:
                 self.base_model.library[molecule][reaction] = \
                     Reaction(molecule, direction, reactants, reactants2, targets, templates, observables, expressions)
 
-
                 reaction = None
                 direction = None
                 reactants = []
@@ -152,6 +156,8 @@ class ModelAssembler:
         required = False
         optional = False
         module = False
+        listed = False
+        lists = False
         competition = False
         fill_binding = False
         text_top = False
@@ -186,6 +192,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -198,6 +206,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -210,6 +220,8 @@ class ModelAssembler:
                         required = True
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -222,6 +234,8 @@ class ModelAssembler:
                         required = False
                         optional = True
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -234,6 +248,36 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = True
+                        listed = False
+                        lists = False
+                        competition = False
+                        fill_binding = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
+                        continue
+                    if each[0].strip() == 'listed reactions':
+                        components = False
+                        labels = False
+                        required = False
+                        optional = False
+                        module = False
+                        listed = True
+                        lists = False
+                        competition = False
+                        fill_binding = False
+                        text_top = False
+                        text_bottom = False
+                        text_obs = False
+                        continue
+                    if each[0].strip() == 'lists':
+                        components = False
+                        labels = False
+                        required = False
+                        optional = False
+                        module = False
+                        listed = False
+                        lists = True
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -246,6 +290,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = True
                         fill_binding = False
                         text_top = False
@@ -258,6 +304,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = True
                         text_top = False
@@ -270,6 +318,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = True
@@ -282,6 +332,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -294,6 +346,8 @@ class ModelAssembler:
                         required = False
                         optional = False
                         module = False
+                        listed = False
+                        lists = False
                         competition = False
                         fill_binding = False
                         text_top = False
@@ -414,6 +468,28 @@ class ModelAssembler:
                                 if item[1] not in self.base_model.nodes[item[0]].labels:
                                     self.base_model.nodes[item[0]].labels.append(item[1])
 
+                    if listed:
+                        each = [x.strip() for x in each]
+                        self.base_model.listed_reactions.append(deepcopy(each))
+                        for item in each[1:]:
+                            if '(' in item and '{' not in item:
+                                item = item.split('(')
+                                item[1] = item[1].split('[')[1][:-1]
+                                if item[1] not in self.base_model.library:
+                                    print('"' + item[1] + '" not in library')
+                                    quit()
+                                if item[0] not in self.base_model.nodes:
+                                    print('"' + item[0] + '" not in molecule list')
+                                    quit()
+                                # labels are probably not necessary at the moment
+                                # but could be relevant later
+                                if item[1] not in self.base_model.nodes[item[0]].labels:
+                                    self.base_model.nodes[item[0]].labels.append(item[1])
+
+                    if lists:
+                        each = [x.strip() for x in each]
+                        self.base_model.lists.append(deepcopy(each))
+
                     if competition:
                         each = [x.strip() for x in each]
                         if each[0].strip() not in self.base_model.competing_sites:
@@ -437,6 +513,42 @@ class ModelAssembler:
 
     def enumerate_models(self):
 
+        # listed reactions
+        reaction_numbers = defaultdict(list)
+        for each in self.base_model.listed_reactions:
+            if each:
+                for item in each:
+                    if '{' in item:
+                        reaction_numbers[item[1:-1].strip()] = each
+
+        # todo stuff
+        # ordered_list = []
+        # for each in self.base_model.lists:
+        #     prelist = False
+        #     for item in each[1:]:
+        #         if ':' in item:
+        #             prelist = True
+        #     if not prelist:
+        #         ordered_list.append([0, deepcopy(each)])
+        #     else:
+        #         lowest = 1000000
+        #         for item in each[1:]:
+        #             if ':' in item:
+        #                 pln = int(item.split(':')[1].strip())
+        #                 if pln < lowest:
+        #                     lowest = pln
+        #         ordered_list.append([lowest, each])
+        # ordered_list.sort()
+
+        lists_of_rxns = []
+        for each in self.base_model.lists:
+            lists_of_rxns.append([])
+            for item in each[1:]:
+                lists_of_rxns[-1].append(reaction_numbers[item])
+        if not lists_of_rxns:
+            lists_of_rxns.append([])
+
+        # module reactions
         modules = defaultdict(lambda: defaultdict(list))
         noncomps = defaultdict(lambda: defaultdict(list))
         for each in self.base_model.module_reactions:
@@ -659,9 +771,11 @@ class ModelAssembler:
 
             if grouped and is_disjoint and compatible:
                 for each in modules_list:
-                    new_model.module_reactions = each
-                    new_model.optional_reactions = reaction_set
-                    self.models.append(deepcopy(new_model))
+                    for item in lists_of_rxns:
+                        new_model.module_reactions = each
+                        new_model.listed_reactions = item
+                        new_model.optional_reactions = reaction_set
+                        self.models.append(deepcopy(new_model))
 
     def remove_useless_models(self):
 
@@ -675,6 +789,7 @@ class ModelAssembler:
                 all_reactions = deepcopy(mod.required_reactions)
                 all_reactions.extend(deepcopy(mod.optional_reactions))
                 all_reactions.extend(deepcopy(mod.module_reactions))
+                all_reactions.extend(deepcopy(mod.listed_reactions))
                 node_lists = []
                 for reaction in all_reactions:
                     rxn_nodes = []
@@ -758,13 +873,13 @@ class ModelAssembler:
         self.models = deepcopy(models)
 
     def build_models(self):
-
         model_index = 0
         if os.path.exists('output/' + self.models[0].name):
             shutil.rmtree('output/' + self.models[0].name)
         for n, model in enumerate(self.models):
-            if len(model.optional_reactions) + len(model.required_reactions) + len(model.module_reactions) > 0:
-                ModelBuilder(model_index, model, self.obs)
+            if len(model.optional_reactions) + len(model.required_reactions) \
+                 + len(model.module_reactions) + len(model.listed_reactions) > 0:
+                ModelBuilder(model_index, model, self.obs, self.network_figs)
                 model_index += 1
 
 
@@ -772,12 +887,13 @@ class ModelBuilder(Builder):
     """
     Build a PySB model.
     """
-    def __init__(self, num, model, obs):
+    def __init__(self, num, model, obs, network_figs):
 
         super(ModelBuilder, self).__init__()
         self.num = num
         self.current_model = model
         self.obs = obs
+        self.network_figs = network_figs
         self.parsed_templates = defaultdict(lambda: defaultdict(list))
         self.parsed_obs_templates = defaultdict(lambda: defaultdict(list))
         self.parsed_exp_templates = defaultdict(lambda: defaultdict(list))
@@ -1000,7 +1116,7 @@ class ModelBuilder(Builder):
                         break
                     rule_index += 1
 
-        # remove uneeded parameters
+        # remove unneeded parameters
         new_contents = []
         for each in contents:
             retain = True
@@ -1016,6 +1132,20 @@ class ModelBuilder(Builder):
         for each in new_contents:
             f.write(each)
         f.close()
+
+        if self.network_figs:
+
+            filename = '/home/mak/PycharmProjects/HypBuilder/output/' + self.current_model.name + '/model_' + str(self.num) + '.py'
+            print(filename)
+
+            spec = importlib.util.spec_from_file_location('model_' + str(self.num) + '.py', 'output/' + self.current_model.name + '/model_' + str(self.num) + '.py')
+            model = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(model)
+
+            psv = PysbStaticViz(model.model)
+            save_path = filename[:-3] + '.png'
+            psv.networkx_draw(type_graph='observables', save_path=save_path, figsize=[15, 15], layout='spring_layout', **{'k': 1})
+            # psv.networkx_draw(type_graph='species', save_path=save_path, layout='circular_layout', **{'seed': 1})
 
 
     def build(self):
@@ -1070,11 +1200,11 @@ class ModelBuilder(Builder):
                     self.parsed_templates[molecule][reaction].append(parsed_rxn)
 
     def process_reactions(self):
-
         # collect required and optional reactions
         reactions_to_process = deepcopy(self.current_model.required_reactions)
         reactions_to_process.extend(deepcopy(self.current_model.optional_reactions))
         reactions_to_process.extend(deepcopy(self.current_model.module_reactions))
+        reactions_to_process.extend(deepcopy(self.current_model.listed_reactions))
 
         for each in reactions_to_process:
 
