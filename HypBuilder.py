@@ -14,7 +14,7 @@ from pysb.bng import generate_network
 from pysb.bng import generate_equations
 import shutil
 import importlib.machinery, importlib.util
-from pyvipr.pysb_viz.static_viz import PysbStaticViz
+# from pyvipr.pysb_viz.static_viz import PysbStaticViz
 
 
 class Node:
@@ -92,7 +92,6 @@ class ModelAssembler:
         text = []
         text_read = False
         SSS = False
-
 
         library_file = open(file_name)
         for line in library_file:
@@ -516,10 +515,17 @@ class ModelAssembler:
         # listed reactions
         reaction_numbers = defaultdict(list)
         for each in self.base_model.listed_reactions:
+            print(each)
             if each:
                 for item in each:
                     if '{' in item:
-                        reaction_numbers[item[1:-1].strip()] = each
+                        item = item[1:-1].split('|')
+                        print(item)
+                        for every in item:
+                            print(every)
+                            if ':' in every and every.split(':')[0].strip() == 'list':
+                                print(item)
+                                reaction_numbers[every.split(':')[1].strip()] = each
 
         # todo stuff
         # ordered_list = []
