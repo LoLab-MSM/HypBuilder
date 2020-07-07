@@ -13,10 +13,10 @@ I, 1
 
 listed reactions
 
-catalysis, A()[catalyzer], B()[substrate], C()[product], {1}
-catalysis, A()[catalyzer], C()[substrate], D()[product], {2}
-catalysis, A()[catalyzer], E()[substrate], F()[product], {3}
-catalysis, A()[catalyzer], F()[substrate], G()[product], {4}
+catalysis, A()[catalyzer], B()[substrate], C()[product], {list:1}
+catalysis, A()[catalyzer], C()[substrate], D()[product], {list:2}
+catalysis, A()[catalyzer], E()[substrate], F()[product], {list:3}
+catalysis, A()[catalyzer], F()[substrate], G()[product], {list:4}
 
 lists
 
