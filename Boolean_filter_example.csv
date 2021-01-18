@@ -1,0 +1,26 @@
+model components
+
+A, 1
+B, 1
+C, 1
+D, 1
+
+
+optional reactions
+
+1, inhibition, A()[inhibitor], B()[inh_target]
+2, inhibition, A()[inhibitor], C()[inh_target]
+3, inhibition, A()[inhibitor], D()[inh_target]
+4, inhibition, B()[inhibitor], C()[inh_target]
+5, inhibition, B()[inhibitor], D()[inh_target]
+6, inhibition, C()[inhibitor], D()[inh_target]
+
+
+Boolean rules
+
+rule 1: not (1 and 2)
+rule 2: not (1 and 3)
+rule 3: not (2 and 3)
+rule 4: (1 and 4) or (not 1 and not 4)
+rule 5: (2 and 5) or (not 2 and not 5)
+rule 6: (3 and 6) or (not 3 and not 6)
