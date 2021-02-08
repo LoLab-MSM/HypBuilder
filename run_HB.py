@@ -1,5 +1,5 @@
 
-from HypBuilder3 import ModelAssembler
+from HypBuilder import ModelAssembler
 
 # to run an example just uncomment the appropriate line and run this file
 
